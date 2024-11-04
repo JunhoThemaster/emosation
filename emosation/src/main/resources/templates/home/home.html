@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Emosation</title>
+    <link rel="stylesheet" href="/css/loginreg.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const signUpBtn = document.getElementById("signUp");
+            const signInBtn = document.getElementById("signIn");
+            const container = document.querySelector(".container");
+
+            signUpBtn.addEventListener("click", () => {
+                container.classList.add("right-panel-active");
+            });
+            signInBtn.addEventListener("click", () => {
+                container.classList.remove("right-panel-active");
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"/>
+</head>
+<body>
+<div layout:fragment="content" >
+    <div class="wrapper"  style="display: grid; place-items: center; min-height: 30vh; background-color: #E1F6FA;">
+        <div class="container">
+            <div class="sign-up-container">
+                <form>
+                    <h1>회원 가입</h1>
+                    <span></span>
+                    <input id="name" type="text" placeholder="Name">
+                    <input id="email" type="email" placeholder="Email">
+                    <input id="upPw" type="password" placeholder="Password">
+                    <input id="cupPW" type="password" placeholder="ConfirmPassword">
+                    <button class="form_btn">가입하기</button>
+                </form>
+            </div>
+            <div class="sign-in-container">
+                <form>
+                    <h1>로그인</h1>
+                    <span></span>
+                    <input id="id" type="text" placeholder="ID">
+                    <input id="pw" type="password" placeholder="Password">
+                    <button class="form_btn">로그인</button>
+                </form>
+            </div>
+            <div class="overlay-container">
+                <div class="overlay-left">
+                    <h1>잘 오셨어요!</h1>
+                    <p>이미 계정이 있나요?</p>
+                    <button id="signIn" class="overlay_btn">로그인</button>
+                </div>
+                <div class="overlay-right">
+                    <h1>이모세이션!</h1>
+                    <p>지금 감정분석형 채팅을 시작해보세요</p>
+                    <button id="signUp" class="overlay_btn">가입하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

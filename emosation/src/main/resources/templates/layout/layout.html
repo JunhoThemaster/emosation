@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"/>
+</head>
+<body>
+<div style="display: grid; place-items: center; min-height: 100vh; background-color: #E1F6FA" >
+    <header>
+        <h1>EMOSATION</h1>
+    </header>
+    <main layout:fragment="content" > <!-- 동적 콘텐츠를 위한 자리 -->
+        <p>여기서 페이지 내용을 삽입하세요.</p>
+    </main>
+    <footer>
+        <p></p>
+    </footer>
+</div>
+</body>
+</html>
