@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/button.css}">
+
+
+</head>
+<style>
+    .searchInput {
+        border: 0;
+        outline: 0; /* focus style on parent */
+        background: transparent;
+        font: inherit;
+    }
+
+    .icon {
+        width: 1rem;
+        aspect-ratio: 1;
+        fill: currentColor;
+    }
+
+    .visually-hidden {
+        position: absolute;
+        left: -9999px;
+    }
+
+
+</style>
+<script>
+
+</script>
+<body style="background-color: #5b63fb">
+<div layout:fragment="content" >
+    <div class="modal">
+        <div class="modal_popup">
+            <h3>검색결과</h3>
+            <button type="button" class="close_btn">닫기</button>
+            <br>
+            <div>
+                <table class="table-fill">
+                    <tbody >
+                        <tr id="searchResult" >
+
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+    <div style="display: flex; justify-content: flex-start; align-items: center;">
+        <div>친구 검색 <input class="searchInput" id="find" placeholder="이름 검색" style="margin-right: 10px;"></div> <!-- 입력창과 버튼 사이에 간격 추가 -->
+        <button  onclick="search()" class="button button--wayra button--border-medium button--text-upper button--size-s button--text-thick button--inverted">
+            검색
+        </button>
+    </div>
+
+    <div style="display: inline-block;">
+    <div style="display: inline-block; vertical-align: top; margin-right: 20px;">
+    <table class="table-fill">
+        <thead>
+        <tr>
+           <th class="text-center">
+              친구 목록
+           </th>
+        </tr>
+        <tr>
+            <td>
+                <button class="button button--wayra button--border-medium button--text-upper button--size-s button--text-thick button--inverted" >추천친구보기</button>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr id="frlist">
+
+        </tr>
+        </tbody>
+    </table>
+    </div>
+    <div style="display: inline-block; vertical-align: top; margin-right: 20px; width: 500px">
+    <table class="table-fill">
+        <thead>
+        <tr>
+            <th class="text-center">
+                채팅 목록
+            </th>
+        </tr>
+        </thead>
+    </table>
+    </div>
+        <div style="display: inline-block; vertical-align: top; margin-right: 20px;">
+            <table class="table-fill">
+                <thead>
+                <tr>
+                    <th class="text-center">내정보</th>
+                </tr>
+
+                </thead>
+            </table>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+</div>
+
+
+</body>
+</html>
