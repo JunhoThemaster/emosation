@@ -2,12 +2,16 @@ package com.emosation.emosation.model.chat;
 
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Table(name="chat_room")
 public class ChatRoom {
 

@@ -3,7 +3,12 @@ package com.emosation.emosation.model.user;
 
 import com.emosation.emosation.model.chat.Message;
 import com.emosation.emosation.model.chat.RoomInUsers;
+
+
+import com.emosation.emosation.model.friend.Friends;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -11,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Table(name ="users")
 public class User {
     @Id
@@ -41,7 +48,10 @@ public class User {
     private List<RoomInUsers> myrooms = new ArrayList<>();
 
     @OneToMany(mappedBy = "sender" ,cascade = CascadeType.ALL)
-    private List<Message> sentedessages = new ArrayList<>();
+    private List<Message> sentedmessages = new ArrayList<>();
+
+
+
 
 
 }

@@ -3,11 +3,15 @@ package com.emosation.emosation.model.chat;
 
 import com.emosation.emosation.model.user.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "roominusers")
 public class RoomInUsers {
 

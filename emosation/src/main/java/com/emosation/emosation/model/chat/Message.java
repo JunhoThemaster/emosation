@@ -3,11 +3,15 @@ package com.emosation.emosation.model.chat;
 
 import com.emosation.emosation.model.user.User;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@Setter
 @Table(name="message")
 public class Message {
 

@@ -1,0 +1,65 @@
+input{
+    font-family: 'Noto Sans KR','Noto Sans Korean', "Nanum Gothic", sans-serif !important;
+    -webkit-appearance: none;
+    -webkit-border-radius: 0;
+    border: 0;
+    outline: none;
+    font-size: 10px;
+}
+input::placeholder{
+    color: #d9d9d9
+}
+.dust-class{
+    width: 50%;
+    box-sizeing: border-box;
+    margin: 20px auto;
+    position: relative;
+}
+.dust-class label{
+    display: inline-block;
+    position: absolute;
+    top: -5px;
+    left: 14px;
+    padding: 10px;
+    background: white;
+    font-size: 14px;
+    color: #888;
+    font-weight: bold;
+}
+.dust-class.ver2 label{
+    top: initial;
+    bottom: -20px;
+}
+.dust-class label span{
+    color: #da4841;
+    vertical-align: -1px;
+}
+.dust-class input{
+    width: 100%;
+    border: 1px solid #dddddd !important;
+    font-size: 1rem;
+    line-height: 1.45;
+    letter-spacing: -0.04rem;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+
+.searchInput {
+    border: 0;
+    outline: 0; /* focus style on parent */
+    background: transparent;
+    font: inherit;
+}
+
+.icon {
+    width: 1rem;
+    aspect-ratio: 1;
+    fill: currentColor;
+}
+
+.visually-hidden {
+    position: absolute;
+    left: -9999px;
+}

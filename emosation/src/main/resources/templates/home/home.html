@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Emosation</title>
     <link rel="stylesheet" href="/css/loginreg.css">
+    <script src="/js/common.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const signUpBtn = document.getElementById("signUp");
@@ -22,27 +23,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"/>
 </head>
-<body>
+<body >
 <div layout:fragment="content" >
-    <div class="wrapper"  style="display: grid; place-items: center; min-height: 30vh; background-color: #E1F6FA;">
+    <div class="wrapper"  style="display: grid; place-items: center; min-height: 30vh; ">
         <div class="container">
             <div class="sign-up-container">
-                <form>
+                <form id="sign-up" method="post">
                     <h1>회원 가입</h1>
                     <span></span>
-                    <input id="name" type="text" placeholder="Name">
-                    <input id="email" type="email" placeholder="Email">
-                    <input id="upPw" type="password" placeholder="Password">
-                    <input id="cupPW" type="password" placeholder="ConfirmPassword">
-                    <button class="form_btn">가입하기</button>
+                    <input id="name" type="text" required placeholder="이름">
+                    <input id="email" type="email" required placeholder="이메일">
+                    <input id="Phone" type="number" required placeholder="전화번호">
+                    <input id="upPw" type="password" required placeholder="비밀번호">
+                    <input id="cupPW" type="password" required placeholder="재확인 비밀번호">
+                    <button id="reg" class="form_btn">가입하기</button>
                 </form>
             </div>
             <div class="sign-in-container">
-                <form>
+                <form id="sign-in" onsubmit="event.preventDefault(); Login();">
                     <h1>로그인</h1>
                     <span></span>
-                    <input id="id" type="text" placeholder="ID">
-                    <input id="pw" type="password" placeholder="Password">
+                    <input id="em" type="text" placeholder="이메일">
+                    <input id="pw" type="password" placeholder="비밀번호">
                     <button class="form_btn">로그인</button>
                 </form>
             </div>
