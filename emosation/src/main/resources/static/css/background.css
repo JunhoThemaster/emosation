@@ -1,3 +1,66 @@
 .gradient-background{
     background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
 }
+
+
+
+*{
+    box-sizing:border-box;
+}
+body{
+    margin:0;
+    font:.9em/1.5 'Roboto';
+    cursor:default;
+}
+.box{
+    width:80%;
+    max-width:400px;
+    margin:2em auto;
+}
+.message{
+    width:calc(100% - 100px);
+    border-radius:15px;
+    padding:1em;
+}
+.person-a .message{
+    background:#f8f8f8;
+}
+.person-a{
+    display:flex;
+    align-items:flex-end;
+}
+.icon{
+    --size:40px;
+    width:var(--size);
+    height:var(--size);
+    background:url(https://i.ibb.co/vB9B6G8/mWDLI93.gif);
+    background-position:center;
+    background-size:cover;
+    border-radius:100%;
+    margin-right:.8em;
+    position:relative;
+}
+.icon::after{
+    content:' ';
+    position:absolute;
+    width:10px;
+    height:10px;
+    background:lightgreen;
+    border-radius:100%;
+    bottom:0;
+    right:0;
+}
+.person-b .message{
+    background:lightblue;
+    margin:2em 0;
+    margin-left:100px;
+    color:white;
+    text-align:right;
+}
+.message svg{
+    height:26px;
+    vertical-align:middle;
+}
+.last{
+    width:auto;
+}

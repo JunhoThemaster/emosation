@@ -8,7 +8,9 @@ import com.emosation.emosation.repository.FriendRepository;
 import com.emosation.emosation.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +49,27 @@ public class FriendService {
             );
         }).collect(Collectors.toList());
     }
+
+    @Transactional
+    public void addFriend(Long addedBy, Long youadded) {
+
+        User addedby = userRepository.findById(addedBy).orElseThrow(() ->  new RuntimeException("User not found"));
+        User yadded = userRepository.findById(youadded).orElseThrow(() ->  new RuntimeException("User not found"));
+
+        if(addedBy == youadded){
+
+            return;
+        }
+
+
+        Friends friends = new Friends();
+
+        friends.setAddedby(addedby);
+        friends.setYouadded(yadded);
+        friends.setAddedat(LocalDateTime.now());
+        friendRepository.save(friends);
+    }
+
 
 
 

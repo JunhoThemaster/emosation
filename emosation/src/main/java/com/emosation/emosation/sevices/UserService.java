@@ -42,13 +42,19 @@ public class UserService {
         return userRepository.findByEmail(em);
     }
 
+
+
+
+
     public Optional<UserDTO> findUserByName(String name) {
-            Optional<User> user  = userRepository.findByName(name);
+            Optional<User> user  = userRepository.findByName(name.trim());
             if(user.isPresent()) {
                 User u = user.get();
                 return Optional.of(new UserDTO(u.getId(), u.getName(),u.getEmail(),u.getPics()));
+            }else{
+                return Optional.empty();
             }
-      return Optional.empty();
+
     }
 
 
@@ -58,15 +64,20 @@ public class UserService {
     @Transactional
     public void save(String email, String name, String pw, BigInteger phone) {
         User user = new User();
-        user.setEmail(email);
-        user.setName(name);
-        user.setPhone(phone);
-        user.setPw(pw);
-        String defaultImagePath = "/img/DefaultUser.jpg";
-        user.setPics(defaultImagePath);
+        if(userRepository.findByEmail(email) == null) {
+            System.out.println("User not found attempting to save user");
 
-        userRepository.save(user);
-
+            user.setEmail(email);
+            user.setName(name);
+            user.setPhone(phone);
+            user.setPw(pw);
+            String defaultImagePath = "/img/DefaultUser.jpg";
+            user.setPics(defaultImagePath);
+            userRepository.save(user);
+        }
+        else {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
 
 
     }

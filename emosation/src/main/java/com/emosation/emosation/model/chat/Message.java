@@ -36,6 +36,11 @@ public class Message {
     private LocalDateTime sentedAt = LocalDateTime.now();
 
 
+    @Column(name = "read", nullable = true )
+    private Boolean read = false;
+
+
+
 
 
 }
