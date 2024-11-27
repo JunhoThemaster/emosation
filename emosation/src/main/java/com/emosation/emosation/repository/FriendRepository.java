@@ -6,7 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface FriendRepository extends JpaRepository<Friends,Long> {
+public interface  FriendRepository extends JpaRepository<Friends,Long> {
 
     List<Friends> findByAddedby(User user);
+
+
+
 }

@@ -1,59 +1,79 @@
+
+
 document.addEventListener('DOMContentLoaded', function (){
 
-
-
-
-
-    if(window.location.pathname==='/'){
-        const signUpform = document.getElementById("sign-up")
-        signUpform.addEventListener('submit',function (event){
-            event.preventDefault();
-            const name = document.getElementById("name").value;
-            const email = document.getElementById("email").value;
-            const pw = document.getElementById("upPw").value;
-            const phone = document.getElementById("Phone").value;
-            const confirmpw = document.getElementById("cupPW").value;
-            const body = JSON.stringify({
-                Name : name,
-                Email : email,
-                Pw : pw,
-                Phone : phone,
-            })
-
-            fetch('/register',{
-                method : 'POST',
-                headers : {'Content-Type': 'application/json'},
-
-                body : body,
-
-            })
-                .then(resp =>{
-                    if (!resp){
-                        alert("회원가입 실패 다시시도");
-                        return;
-                    }
-                    alert("회원가입 성공");
-                    window.location.href = '/';
-                })
-                .catch((error) =>{
-                    alert("회원가입 실패");
-                })
-
-        });
-
-    }
-
     if(window.location.pathname === '/main'){
-
             main();
 
 
-
     }
 
-
-
 });
+async function register() {
+    // 폼 값들 가져오기
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const pw = document.getElementById("upPw").value;
+    const phone = document.getElementById("Phone").value;
+    const confirmpw = document.getElementById("cupPW").value;
+
+    // 비밀번호와 확인 비밀번호 일치 체크
+    if (pw !== confirmpw) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return;
+    }
+
+    // 유효성 검사: 필수 값이 비어 있지 않은지 확인
+    if (!name || !email || !pw || !phone || !confirmpw) {
+        alert("모든 필드를 채워주세요.");
+        return;
+    }
+
+    // 비밀번호 강도 체크 (간단한 예시: 6자 이상)
+    if (pw.length < 6) {
+        alert("비밀번호는 6자 이상이어야 합니다.");
+        return;
+    }
+
+    // 서버로 전송할 데이터 형식
+    const body = JSON.stringify({
+        Name: name,
+        Email: email,
+        Pw: pw,
+        Phone: phone,
+    });
+
+    // 버튼 비활성화 (중복 클릭 방지)
+    const submitButton = document.getElementById("reg");
+    submitButton.disabled = true;
+
+    try {
+        // fetch를 통한 서버로의 POST 요청
+        const resp = await fetch('/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: body,
+        });
+
+        if (!resp.ok) {
+            alert("회원가입 실패. 다시 시도해 주세요.");
+            submitButton.disabled = false; // 실패 시 버튼 다시 활성화
+            return;
+        }
+
+        alert("회원가입 성공");
+        window.location.href = '/'; // 회원가입 성공 후 리다이렉션
+
+    } catch (error) {
+        console.error("회원가입 중 오류 발생", error);
+        alert("회원가입 실패. 다시 시도해 주세요.");
+    } finally {
+        submitButton.disabled = false; // 요청이 끝난 후 버튼 다시 활성화
+    }
+}
+
+
+
 
 async function Login(){
     const em = document.getElementById('em').value;
@@ -87,43 +107,8 @@ async function Login(){
     }catch (error) {
         alert("서버 요청 실패" + error);
     }
-
-
-
-
-
-
 }
 
-async function main(){
-    const LoggedIn = await checkLogin();
-
-    if(LoggedIn.loggedIn){
-        const userId = LoggedIn.userId;
-        try{
-            const resp = await fetch(`/main/myfrlist?userid=${userId}`,{
-                method:'GET',
-                headers:{'Content-Type':'application/json'},
-
-            });
-            if(resp.ok){
-                const data = await resp.json();
-               if(data && data.length > 0){
-                   const fr = data[0];
-                   const tr = document.getElementById('frlist');
-                   const td = document.createElement('td');
-                   td.innerText = fr.name;  // 이메일을 td로 설정
-                   tr.appendChild(td);
-
-               }
-            }else {
-                alert("서버응답 실패");
-            }
-        }catch (error){
-            alert("호출 실패" + error);
-        }
-    }
-}
 
 
 async function checkLogin() {
@@ -145,13 +130,12 @@ async function checkLogin() {
 
         if (response.ok) {
             const data = await response.json(); // 응답 데이터가 있을 경우 처리
-            console.log('로그인 상태 확인됨:', data.userId);
+            console.log('로그인 상태 확인됨:', data.userEmail);
             if (data.accessToken) {
                 localStorage.setItem('accessToken', data.accessToken);
             }
-            userId = data.userId;
 
-            return { loggedIn: true, userId: data.userId };
+            return { loggedIn: true, userEmail: data.userEmail };
         } else {
             console.log('인증 실패:', response.status);
             window.location.href = '/'
@@ -168,6 +152,63 @@ async function checkLogin() {
         return { loggedIn: false};
     }
 }
+
+async function main(){
+    const LoggedIn = await checkLogin();
+
+    if(LoggedIn.loggedIn){
+        const userId = LoggedIn.userEmail;
+        console.log(userId);
+        roomList(LoggedIn);
+        connectws(LoggedIn);
+        try{
+            const resp = await fetch(`/main/myfrlist?userid=${userId}`,{
+                method:'GET',
+                headers:{'Content-Type':'application/json'},
+
+            });
+            if(resp.ok){
+                const data = await resp.json();
+                const tbody = document.getElementById('frlist');
+                tbody.innerText = "" ;// 친구추가시에 친구 목록의 중첩을 방지하기위함.
+               if(data && data.length > 0){
+                   data.forEach(fr => {
+
+                       const tr = document.createElement('tr');
+                       const td = document.createElement('td');
+                       td.innerText = fr.name;
+
+                       tr.id = "userEm"
+                       tr.className = fr.email;
+                       tr.appendChild(td);
+
+                       const btntd = document.createElement("button");
+                       btntd.onclick = function (ev){
+                           ev.preventDefault();
+                           openChatBox(LoggedIn,fr.email) };
+                       btntd.id = fr.id;
+                       btntd.innerText = "메세지 보내기";
+
+                       btntd.className = "button button--wayra button--border-medium button--text-upper button--size-s button--text-thick button--inverted";
+
+                       tr.appendChild(btntd);
+
+                       tbody.appendChild(tr);
+
+                   });
+
+
+               }
+            }else {
+                alert("서버응답 실패");
+            }
+        }catch (error){
+            alert("호출 실패" + error);
+        }
+    }
+}
+
+
 
 async function search(){
 
@@ -186,6 +227,8 @@ async function search(){
             if (resp.ok) {
                 // 응답을 JSON으로 변환하여 데이터 받기
                 const data = await resp.json(); // await 추가
+
+                console.log(data);
                 const modal = document.querySelector('.modal')
                 const close = document.querySelector('.close_btn')
                 const tr = document.getElementById("searchResult");
@@ -194,12 +237,16 @@ async function search(){
                 td.innerText = data.user.name;
                 td.id = data.user.id;
 
-                const btntd = document.createElement('td')
+                const btntd = document.createElement('td');
                 const btn = document.createElement('button');
                     btn.className="button button--wayra button--border-medium button--text-upper button--size-s button--text-thick button--inverted"
                     btn.innerText="친구추가"
                 btntd.appendChild(btn);
 
+                btn.name = 'frid'
+                btn.onclick = function (){
+                    addFr(data.user.id);
+                }
                 tr.appendChild(td);
                 tr.appendChild(btntd);
                 if(data.user.name){
@@ -207,6 +254,9 @@ async function search(){
                 }
                 close.addEventListener('click',function (){
                     modal.style.display = 'none';
+                    btn.remove();
+                    btntd.remove();
+                    td.remove();
                 })
 
 
@@ -219,11 +269,706 @@ async function search(){
             console.error('Error:', error);
             alert("네트워크 오류");
         }
+    }
+}
+
+async function addFr(frid){
+
+    const loggedIn = await checkLogin();
+
+    if(loggedIn.loggedIn){
+        const userid = loggedIn.userEmail;
 
 
+
+        const resp = await fetch(`/main/addfr/${userid}/${frid}`,{
+            method : 'POST',
+            headers : {'Content-Type' : 'application/json'}
+
+        });
+        try{
+            if(resp.ok){
+                const data = await resp.json();
+                main();
+                alert(data.msg);
+            }
+            else {
+                alert(data.errors);
+            }
+
+        } catch (error){
+            alert('오류 발생' + error);
+        }
+
+    }else{
+        alert("로그인이 필요합니다");
+        window.location.href = '/';
+    }
+
+
+}
+
+
+
+
+let ws = null;
+function connectws(LoggedIn) {// JWT 토큰을 로컬 스토리지에서 가져옴
+
+        const token = localStorage.getItem('accessToken');
+        const wsUrl = "ws://localhost:8080/ws-login?Authorization=" + encodeURIComponent('Bearer ' + token);
+        ws = new WebSocket(wsUrl);  // WebSocket 연결 생성
+
+        ws.onopen = function() {
+            console.log("WebSocket 연결 성공");
+
+            // WebSocket 연결이 성공한 후, 메시지를 수신하도록 설정
+            let encodedEmail = encodeURIComponent(LoggedIn.userEmail);
+
+            console.log("WebSocket 연결 상태:", ws.readyState); // 상태 확인 (OPEN -> 1)
+
+        };
+
+        ws.onmessage = function(event) {
+            // 서버로부터 받은 메시지를 처리
+            const message = JSON.parse(event.data);  // 예시: 메시지를 JSON 형식으로 처리
+            // console.log("서버로부터 받은 메시지:", message);
+
+            if(message.type === "message"){ //type이 그냥 메세지인경우는 상대세션의 존재여부에 따른 검증을 해줄 showmsg 호출
+                                            //  showmsg에는 채팅방을열면 ul요소의 chat-{id} 이런식으로 설정된다. 그렇기에
+                                            // 현재 채팅방을 조회하고있지않다는 뜻이기에 출력을 안하게된다 있으면 출력.
+                showmsg(message);
+
+
+            }else if(message.type === "status"){ // 메세지 오브젝트에서의 type을 비교함
+                const isSessioninroom = message.doesSheInRoom; // 핸들러에서 보낸 boolean값 담아줌
+
+                console.log("isSessioninroom :" + isSessioninroom);
+
+                if(isSessioninroom){  // 상대 세션이 채팅방에 존재하고 나도 존재한다면? 이떄부터 옵져버 시작 실시간으로 읽음 표시를 보낸 메세지를 읽음처리함.
+                                        // 채팅방 클로즈 호출시에 isSessionInroom은 false로 설정되어서 전달받게될것임.
+                    const roomId = message.roomId;
+                    observerForChat(roomId);
+                }
+                else{
+                    stopObserver();    // 만약 없다면 옵져버 중단.
+                    console.log("상대방이 없음");
+
+                }
+            }else if(message.type === "newOne"){   // 여기서는 사용자 끼리 연결된 채팅방이 없었고 새로운 채팅방을 생성하고 메세지를 보내면
+                                                    // 핸들러에서 양방향으로 메세지 type: newOne 이라는 메세지를 전송 상대와 나 둘다 알수있게.
+                                                    // 상대는 모르기 때문에 roomList를 호출하여  채팅방 목록 갱신.
+                roomList(LoggedIn);
+                if(message.sender === LoggedIn.userEmail){ // 여기서는 메세지를 내가전송했다? 그러면 채팅을 처음 전송시에는 db에 저장된 메세지를 보는게 아닌 sendmessage호출시에 만들어진 요소를 보는것이기에
+                                                            // ul의 클래스 이름도 채팅방의 id가 아니게된다 그러므로 첫 전송시 상대가 답장을 하게된다면 내가 열어놓은 채팅방에 메세지가 출력되지 않기때문임.
+                    getroombyroomId(message.roomId);
+                }
+            }
+
+        };
+
+        ws.onerror = function(error) {
+            console.error("WebSocket 오류:", error);
+        };
+
+        ws.onclose = function() {
+            console.log("WebSocket 연결 종료");
+            // 재연결 로직 필요 시 추가 가능
+        };
+
+}
+
+let observer;
+function observerForChat(roomId,sentiments){  // 현재 실시간 읽음 처리에서 dom요소를 선택 하지 못하는 문제가 생겼기에 실시간 변이 감지기.
+    const ul = document.querySelector(`ul.chat-${roomId}`);
+
+    if(!ul){
+        console.log("ul요소 없음");
+        return;
+    }
+
+    observer = new MutationObserver((mutations) =>{
+        mutations.forEach((mutations) =>{
+            if(mutations.type === "childList"){
+                mutations.addedNodes.forEach((node)=>{
+                    if(node.nodeType === 1 ){
+                        if(node.classList.contains("me")){
+                            console.log("내가 새로 만든 요소", node);
+                            const lastmsg = ul.querySelector("li.me:last-child");
+
+                            const existingDiv = node.querySelector('.readStat');
+                            if (!existingDiv) {
+                                const div = document.createElement("div");
+                                div.innerText = "읽음";
+                                div.className = "readStat"; // 스타일링을 위한 클래스 추가
+                                node.appendChild(div);
+
+                                // 3초 후 "읽음" 표시 제거
+                                setTimeout(() => {
+                                    div.remove();
+                                }, 3000);
+                            } else {
+                                console.log("이미 '읽음' 표시가 추가되어 있습니다.");
+                            }
+
+                        } else if(node.classList.contains("you")){
+                            console.log("새로 추가된 상대 메시지 요소", node);
+
+                           // 실제로 들어올 메시지로 변경 필요
+                            const existingH2 = node.querySelector("h2.sentiment");
+                            if (existingH2) {
+                                const sentiment = existingH2.innerText;
+
+                                typeEffect(existingH2, sentiment, 30); // 100ms 간격으로 타이핑
+                            }
+
+                        }
+                    }
+                });
+            }
+        })
+    })
+
+    observer.observe(ul,{childList:true});
+
+    console.log(`MutationObserver가 채팅방 (roomId: ${roomId})을 감지하고 있습니다.`);
+
+}
+
+
+function stopObserver(){
+    if(observer){
+        observer.disconnect();
+        console.log("옵져버 중단");
+    }
+}
+
+async function sendMessage(receiverEmail) {
+    const LoggedIn = await checkLogin();
+    if (LoggedIn.loggedIn) {
+        // WebSocket이 연결되어 있지 않으면 연결 시도
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            console.log("WebSocket 연결되지 않음. 연결을 시도합니다...");
+            await connectws(); // WebSocket 연결을 위한 함수 호출
+        }
+
+        const msginput = document.getElementById("msginput");
+
+        const msg = {
+            type: "message",
+            destination: `/ynm/chat/${encodeURIComponent(receiverEmail)}`,  // 수신자의 이메일
+            payload: {
+                sender: LoggedIn.userEmail, // 발신자 이메일
+                content: msginput.value
+            }
+        };
+
+        // WebSocket을 통해 메시지 전송
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            const chatbox = document.getElementById("chatbox")
+
+
+
+            const ul = document.getElementById("chat");
+            setTimeout(()=>{
+                ul.scrollTop = ul.scrollHeight;
+            },100);
+
+            const li = document.createElement("li");
+            li.className = "me";
+
+            const div = document.createElement('div');
+            div.className = "entete";
+
+
+
+            const currentDate = new Date();
+            const currentTime = currentDate.toLocaleTimeString();
+            const h3 = document.createElement("h3");
+            h3.innerText = currentTime;
+
+            const h2 = document.createElement("h2");
+            h2.innerText = LoggedIn.userEmail;
+
+            const div1 = document.createElement("div");
+            div1.className = "triangle";
+
+            const div2 = document.createElement("div");
+
+            div2.className = "message";
+            div2.innerText = `${msg.payload.content}`;
+
+            const croomId = ul.className;
+            const roomId = croomId.split('-')[1];
+
+
+            ws.send(JSON.stringify(msg));
+
+
+            div.appendChild(h3);
+            div.appendChild(h2);
+            li.appendChild(div);
+            li.appendChild(div1);
+            li.appendChild(div2);
+
+            ul.appendChild(li);
+
+            console.log(`메시지 전송됨: ${msg.payload.content} (수신자: ${receiverEmail})`);
+
+        } else {
+            console.log("WebSocket 연결이 열리지 않았습니다.");
+        }
+    }
+
+}
+
+let unreadCnt = 0;
+async function showmsg(msg){
+    const roomId = msg.roomId;
+
+    // const chatbox =
+
+    const ul = document.getElementById("chat");
+    if(ul.className === `chat-${roomId}`){    /// 클라이언트가 채팅방을 조회시에는 class네임이 설정되기에.. roomId로 ul의 구분을 짓지않으면 내가 상대에게 보낸 모든메세지가
+                                                // 상대측이아니어도 출력하게된다.
+
+
+        const li =  document.createElement("li");
+        li.className = "you";
+
+        const div = document.createElement("div");
+        div.className = "entete";
+
+        const currentDate = new Date();
+        const currentTime = currentDate.toLocaleTimeString();
+
+
+        const h2 = document.createElement("h2");
+        h2.innerText = `${msg.sender}`
+
+        const h3 = document.createElement("h3");
+        h3.innerText = currentTime;
+
+
+
+
+        const div1 = document.createElement("div");
+        div1.className = "triangle";
+
+        const div2  = document.createElement("div");
+        div2.className = "message";
+        div2.innerText = `${msg.content}`
+
+        const sentimentElement = document.createElement("h2");
+        sentimentElement.className = "sentiment";
+
+        sentimentElement.innerText = msg.sentiment;
+
+
+
+        div.appendChild(h2);
+        div.appendChild(h3);
+        li.appendChild(div);
+        li.appendChild(div1);
+        li.appendChild(div2);
+        li.appendChild(sentimentElement);
+        ul.appendChild(li);
+        setTimeout(()=>{
+            ul.scrollTop = ul.scrollHeight;
+        },100);
+
+
+    } else{   // 조회하고 있지않다면 알림을 해줄 목적으로 unreadCnt를 ++ 해준다.
+
+        unreadCnt ++  ;
+        const span = document.getElementById(`unread-${roomId}`)
+        if(span){
+            span.className = "note-num";
+            span.innerText = unreadCnt;
+
+        }
+
+    }
+
+}
+
+
+
+async function typeEffect(element,text,speed){
+
+    element.innerText = "";
+    for (let char of text){
+        element.innerText += char;
+        await new Promise(resolve => setTimeout(resolve,speed));
+    }
+
+    setTimeout(() => {
+        element.remove();
+        console.log("타이핑 요소가 제거되었습니다.");
+    }, 2000); // 1초 후 제거 (필요시 조정 가능)
+
+}
+
+
+async function roomList(LoggedIn){   // roomlist들을 화면에 보여주기위한.
+
+    if(LoggedIn.loggedIn)
+        try {
+            const resp = await fetch(`/main/chatlist?userEm=${LoggedIn.userEmail}`,{
+                method : 'GET',
+                headers : {"Content-Type" : "application/json"},
+            });
+            if (resp.ok){
+
+                const data = await resp.json();
+                const ul = document.getElementById("chatList");
+                ul.innerText = "";
+                console.log(data);
+                if(data && data.rooms && data.rooms.length > 0){
+
+
+                    data.rooms.forEach(chatroom =>{
+                        const roomName = chatroom.roomName;
+                        const unreadcnt = data.unreadCnt[chatroom.id];
+
+                        const span = document.createElement("span");
+                        span.className = "note-num";
+                        span.id = `unread-${chatroom.id}` ;
+                        if(unreadCnt === 0){
+                            span.className = "";
+
+                        } else{
+                            span.innerText = unreadcnt + unreadcnt;
+                            span.className = "note-num";
+
+                        }
+
+                        console.log(roomName);
+
+
+
+                        const li = document.createElement("li")
+
+                        const div = document.createElement("div");
+
+                        const a = document.createElement("a");
+                        div.style.position ="relative";
+                        a.innerText = roomName + "의 채팅방";
+                        a.href = "#";
+                        a.addEventListener("click",async (e) => {
+                            e.preventDefault();
+                            getroombyroomId(chatroom.id);
+                        })
+
+
+
+                        div.appendChild(a);
+                        div.appendChild(span);
+                        li.appendChild(div);
+                        ul.appendChild(li);
+
+
+
+                    })
+
+                };
+
+            } else{
+                const ul = document.getElementById("chatList");
+                ul.innerText = data.msg;
+            }
+
+
+        } catch(error){
+            alert(error);
+        }
+
+
+
+}
+
+
+
+async function getroombyroomId(roomId){
+    const loggedIn = await checkLogin();
+
+
+    if(loggedIn.loggedIn){
+        const resp = await fetch(`/main/check?roomId=${roomId}`,{
+            method: 'GET',
+            headers : {'Content-Type' : 'application/json'}
+        })
+
+        if (resp.ok){
+
+            const data = await resp.json()
+
+            if(data.messages && data.users){
+                console.log(data.users);
+                console.log(data.messages);
+                const span = document.getElementById(`unread-${roomId}`);
+
+                span.innerText = "";
+                const sbox = document.getElementById("sendbox");
+                sbox.style.display = "block";
+                const ul = document.getElementById("chat");
+                const closebtn = document.getElementById("closechat");
+
+
+
+                setTimeout(()=>{
+                    ul.scrollTop = ul.scrollHeight;
+                },100);
+                const emails = data.users.map(users => users.email);
+                const receiver = emails.filter(trgt => trgt !== loggedIn.userEmail);
+
+
+                ul.className= `chat-${roomId}`;
+
+
+                console.log(receiver);
+                if (receiver) {
+                    alert(`Receiver: ${receiver}`); // 수신자 이메일을 확인
+                    const trgt = document.getElementById("trgt");
+                    trgt.onclick = function (ev) {
+                        ev.preventDefault();
+                        sendMessage(receiver); // 추출된 이메일로 메시지 전송
+                    };
+                    closebtn.onclick= function (cl){
+                        closeChat(roomId,loggedIn.userEmail);
+                    };
+                    const msg = {
+                        type: "enterRoom",
+                        roomId : roomId,
+                        receiver: receiver,
+                        sender : loggedIn.userEmail,
+                    };
+
+                    ws.send(JSON.stringify(msg));
+                } else {
+                    console.log("No valid receiver found.");
+                }
+
+                const chatlist = document.getElementById("chat");
+                renderMessages(data.messages, chatlist, loggedIn ); // 메시지 렌더링 호출
+
+
+
+            }
+
+        }
+    }
+
+}
+
+
+async function openChatBox(LoggedIn,trgtEm){
+
+    const receiverEmail = document.getElementById("userEm").className;
+
+    if(LoggedIn.loggedIn){
+
+        const resp = await fetch(`/main/checkrooms/${trgtEm}/${LoggedIn.userEmail}`,{
+
+        });
+        if(resp.ok){
+
+            const data = await resp.json();
+
+            if(data.messages){
+
+                const sbox = document.getElementById("sendbox");
+
+                sbox.style.display = "block";
+
+                const trgt = document.getElementById("trgt");
+                trgt.onclick = function (ev) {
+                    ev.preventDefault();
+                    sendMessage(trgtEm);
+                };
+
+                const chatlist = document.getElementById("chat");
+
+                renderMessages(data.messages, chatlist, LoggedIn); // 메시지 렌더링 호출
+
+
+            } else if(data.msg){
+
+                console.log(data.msg);
+                const chatlist = document.getElementById("chat");
+                chatlist.innerText = "";
+                chatlist.className = "";
+                const sbox = document.getElementById("sendbox");
+                sbox.style.display = "block";
+
+                const trgt = document.getElementById("trgt");
+                trgt.onclick = function (ev) {
+                    ev.preventDefault();
+                    sendMessage(trgtEm);
+                };
+
+
+            }
+            }
+        }
+}
+
+
+
+async function closeChat(roomId,em){
+
+
+    const resp = await fetch(`/main/updateRead/${roomId}/${em}`,{
+        method : 'PATCH',
+        headers : {'Content-Type' : 'application/json'}
+    });
+    if(resp.ok){
+        console.log(roomId,em);
+
+        const ormsg = {
+            type : "close",
+            roomId : roomId,
+            semail : em,
+        }
+
+        ws.send(JSON.stringify(ormsg));
+
+        const ul = document.querySelector(`ul.chat-${roomId}`);// roomId를 사용해 각 채팅방별 ul을 찾아야 함
+        if (ul) {
+            ul.className = "";
+            ul.innerHTML = ""; // 해당 채팅방의 메시지를 비움
+            stopObserver();
+        } else {
+            console.log(`채팅방 ID ${roomId}에 해당하는 ul을 찾을 수 없습니다.`);
+        }
+
+    }else{
+       const error = await resp.json();
+       console.log("error : " + error);
+    }
+
+
+}
+
+
+
+function createMessageElement(msg, isSender) {
+    const li = document.createElement("li");
+    li.className = isSender ? "me" : "you";
+    if(li.className === "you"){
+        const div = document.createElement("div");
+        div.className = "entete";
+
+        const h2 = document.createElement("h2");
+        h2.innerText = msg.sender.email;
+
+        const h3 = document.createElement("h3");
+        const time = formatTime(msg.sentedAt);
+        h3.innerText = time;
+
+        const div1 = document.createElement("div");
+        div1.className = "triangle";
+
+        const div2 = document.createElement("div");
+        div2.className = "message";
+        div2.innerText = msg.content;
+
+        const div3= document.createElement("div");
+
+
+
+        div.appendChild(h2);
+        div.appendChild(h3);
+        li.appendChild(div);
+        li.appendChild(div1);
+        li.appendChild(div2);
+        li.appendChild(div3);
+
+        return li;
+
+    } else{
+
+        const div = document.createElement("div");
+        div.className = "entete";
+
+        const h2 = document.createElement("h2");
+        h2.innerText = msg.sender.email;
+
+        const h3 = document.createElement("h3");
+        const time = formatTime(msg.sentedAt);
+        h3.innerText = time;
+
+        const div1 = document.createElement("div");
+        div1.className = "triangle";
+
+        const div2 = document.createElement("div");
+        div2.className = "message";
+        div2.innerText = msg.content;
+
+        const div3 = document.createElement("div");
+
+
+
+
+
+
+
+
+        // 구조화된 요소 추가
+
+        div.appendChild(h3);
+        div.appendChild(h2);
+        li.appendChild(div);
+        li.appendChild(div1);
+        li.appendChild(div2);
+        li.appendChild(div3);
+
+        return li;
 
 
 
     }
 
+
+
+}
+
+
+function renderMessages(messages, chatlist, LoggedIn) {
+    chatlist.innerHTML = ""; // 기존 메시지 초기화
+    chatlist.className = ""; //  기존 채팅방 아이디 초기화.
+    messages.forEach((msg) => {
+        const isSender = msg.sender.email === LoggedIn.userEmail;
+        const roomId = msg.roomId;
+        const messageElement = createMessageElement(msg, isSender);
+        chatlist.className = `chat-${roomId}`;
+        chatlist.appendChild(messageElement);
+    });
+}
+
+
+
+
+
+function formatTime(dateString) {
+    // '2024-11-19T17:30:04.565895'와 같은 날짜 문자열을 Date 객체로 변환
+    const date = new Date(dateString);
+
+    // 시간, 분, 초를 구함
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    let seconds = date.getSeconds();
+
+    // 오후/오전 여부 구하기
+    const period = hours >= 12 ? "오후" : "오전";
+
+    // 12시간제로 변경
+    hours = hours % 12;
+    hours = hours ? hours : 12;  // 0시를 12로 처리
+
+    // 2자리 수로 표시하기 위해 앞에 0 추가 (예: 5 => 05)
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+
+    // 포맷된 시간 문자열 반환
+    return `${period} ${hours}:${minutes}:${seconds}`;
 }

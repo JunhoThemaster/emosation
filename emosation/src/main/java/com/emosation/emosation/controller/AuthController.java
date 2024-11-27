@@ -104,7 +104,7 @@ public class AuthController {
             }
             String userId = jwtUtil.extId(token);
             Map<String, Object> response = new HashMap<>();
-            response.put("userId",userId);
+            response.put("userEmail",userId);
             response.put("accessToken", token);
             return ResponseEntity.ok(response);
 
