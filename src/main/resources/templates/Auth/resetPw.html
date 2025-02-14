@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>새로운 비밀번호 생성</title>
+    <script src="/js/common.js"></script>
+    <style>
+        body {
+            display: flex; /* Flexbox 사용 */
+            justify-content: center; /* 가로로 중앙 정렬 */
+            align-items: center; /* 세로로 중앙 정렬 */
+            height: 100vh; /* 화면 높이를 100%로 설정 */
+            margin: 0; /* 기본 margin 제거 */
+            font-family: Arial, sans-serif; /* 기본 폰트 설정 */
+        }
+        .input_container {
+            display: inline-block; /* 내부 요소 크기 만큼 */
+            padding: 30px; /* padding 4군데 모두 30px */
+        }
+
+        input {
+            width: 15em; /* 가로 크기 */
+            height: 2em; /* 세로 크기 */
+            border: 1px solid gray; /* 기본 테두리 */
+            border-radius: 20px; /* 테두리 둥글게 */
+            padding: 0px 10px; /* 입력 padding 띄우기(좌,우) */
+        }
+
+        input:focus { /* 포커스 시 */
+            border: 1px solid Gold; /* 기본 테두리 변경 */
+            outline: 1px solid Gold; /* out 테두리 변경 */
+        }
+    </style>
+</head>
+
+<body>
+<div class="input_container">
+
+    <form onsubmit="event.preventDefault(); resetPw()">
+        <div>
+            <input id="pw" type="password" placeholder="새로운 비밀번호" />
+        </div>
+        <br/>
+        <div>
+            <input id="repw" type="password" placeholder="다시 입력" />
+        </div>
+        <br/>
+        <div>
+            <button type="submit">변경</button>
+        </div>
+    </form>
+
+</div>
+</body>
+</html>

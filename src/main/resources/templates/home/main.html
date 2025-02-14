@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/layout.html}">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/button.css}">
+    <link rel="stylesheet" th:href="@{/css/chatbox.css}">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+</head>
+<style>
+    .searchInput {
+        border: 0;
+        outline: 0; /* focus style on parent */
+        background: transparent;
+        font: inherit;
+    }
+
+    @media (max-width: 768px) {
+        div {
+            flex-direction: column; /* 좁은 화면에서 수직 정렬 */
+            width: 100%; /* 부모 영역 가득 채우기 */
+        }
+
+        div > div {
+            max-width: 100%; /* 자식 요소가 부모를 넘지 않도록 */
+            margin-bottom: 20px; /* 요소 간 여백 추가 */
+        }
+    }
+</style>
+<script>
+
+</script>
+<body style="background-color: #5b63fb">
+<div layout:fragment="content" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+    <div class="modal">
+        <div class="modal_popup">
+            <h3>검색결과</h3>
+            <button type="button" class="close_btn">닫기</button>
+            <br>
+            <div>
+                <table class="table-fill">
+                    <tbody >
+                        <tr id="searchResult" >
+
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%; padding-top: 20px;">
+        <div  style="display: flex; align-items: center; justify-content: center; margin-right: 10px;">친구 검색 <input class="searchInput" id="find" placeholder="이름 검색" style="margin-right: 10px;"></div> <!-- 입력창과 버튼 사이에 간격 추가 -->
+        <button  onclick="search()" class="button button--wayra button--border-medium button--text-upper button--size-s button--text-thick button--inverted">
+            검색
+        </button>
+    </div>
+
+
+    <div style="display: flex; width: 100%; max-width: 1500px; margin: 0 auto; gap: 20px; box-sizing: border-box; flex-wrap: wrap;">
+        <div style="width: 600px; box-sizing: border-box;">
+            <table class="table-fill" style="width: 100%; table-layout: fixed;">
+                <thead>
+                <tr>
+                   <th class="text-center">
+                      친구 목록
+                   </th>
+                    <th>
+
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        <button class="button button--wayra button--border-medium button--text-upper button--size-s button--text-thick button--inverted" >추천친구보기</button>
+                    </td>
+                </tr>
+                </thead>
+                <tbody id="frlist">
+                <tr>
+
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="flex-grow: 1; box-sizing: border-box;">
+        <div id="container" >
+            <aside >
+                <header>
+                    <input type="text" placeholder="search">
+                </header>
+                <ul id="chatList">
+<!--                    <li>-->
+<!--                        <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_01.jpg" alt="">-->
+<!--                        <div>-->
+<!--                            <h2>Prénom Nom</h2>-->
+<!--                            <h3>-->
+<!--                                <span class="status orange"></span>-->
+<!--                                offline-->
+<!--                            </h3>-->
+<!--                        </div>-->
+<!--                    </li>-->
+                </ul>
+            </aside>
+            <main id="chatbox" >
+                <header id="infobox">
+<!--                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/chat_avatar_01.jpg" alt="">-->
+<!--                    <div>-->
+<!--                        <h2 id="chatname"></h2>-->
+<!--                        <h3>already 1902 messages</h3>-->
+<!--                    </div>-->
+<!--                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_star.png" alt="">-->
+                    <div>
+                        <button id="closechat">닫기</button>
+                    </div>
+                </header>
+                <ul id="chat">
+
+                </ul>
+                <footer id="sendbox" style="display:none;">
+                    <textarea id="msginput" placeholder="뭐라고 보낼까요?"></textarea>
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_picture.png" alt="">
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_file.png" alt="">
+                    <butoon id="trgt" class="button button--wayra button--border-medium button--text-upper button--size-s button--text-thick button--inverted" >메세지 보내기</butoon>
+                </footer>
+            </main>
+        </div>
+        </div>
+    </div>
+
+    <div>
+        <a>마이 페이지</a>
+    </div>
+
+
+
+</div>
+
+
+
+
+</body>
+</html>
