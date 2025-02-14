@@ -46,4 +46,6 @@ redis.conf
 *.p12
 .dockerignore
 init.sql
-
+logs/
+*.log
+"logs/*.log" 
