@@ -15,10 +15,9 @@ public class MessageDTO {
     private String content;
     private UserDTO sender;
     private LocalDateTime sentedAt;
-    private Boolean read;
 
     // 생성자
-    public MessageDTO(Long id, String content, UserDTO sender, LocalDateTime sentedAt, Boolean read, Long roomId) {
+    public MessageDTO(Long id, String content, UserDTO sender, LocalDateTime sentedAt, Long roomId) {
         this.id = id;
         this.content = content;
         this.sender = sender;// 예시: User 객체에서 이메일만 추출

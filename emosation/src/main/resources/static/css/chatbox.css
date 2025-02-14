@@ -19,7 +19,8 @@
 }
 
 #container{
-    width:900px;
+    width: 100%;
+    max-width: 900px;
     height:800px;
     background:#eff3f7;
     margin:0 auto;

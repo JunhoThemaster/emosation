@@ -22,7 +22,7 @@ public class WebSocketHandShakeInterCeptor implements HandshakeInterceptor {
     }
 
 
-    @Override //beforeHandShake 메소드 오버라이딩 원래 사전정의 된 핸드세이크 메소드에는 아무 내용도 있지않음.
+    @Override //beforeHandShake 메소드 오버라이딩 원래 사전정의된 핸드세이크 메소드에는 아무 내용도 있지않음. 따라서 기존 로그인에서 토큰을 파싱후 해당 유저를 세션에 주입
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         String token = request.getURI().getQuery();  // URL에서 쿼리 파라미터 추출 .. 요거 좀 방식이 참 이전에는 헤더에서 토큰의 값을 추출했는데 지금은 파라미터값으루 추출해야함
                                                     // 이거는 http와 별개로 websocket 프로토콜 자체로 헤더정보가 연결후에는 더이상 존재하지않기 때문인거같음 자세한건 좀더 공부해보자.

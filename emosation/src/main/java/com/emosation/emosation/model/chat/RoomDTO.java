@@ -14,7 +14,7 @@ public class RoomDTO {
     private Long id;
     private String roomName;
     private List<UserDTO> roomUser;
-    private List<MessageDTO> messages;
+//    private List<MessageDTO> messages;
     private LocalDateTime openedAt;
 
 

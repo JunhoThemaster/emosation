@@ -9,10 +9,7 @@ import com.emosation.emosation.model.friend.FriendDTO;
 import com.emosation.emosation.model.friend.Friends;
 import com.emosation.emosation.model.user.User;
 import com.emosation.emosation.model.user.UserDTO;
-import com.emosation.emosation.sevices.ChatService;
-import com.emosation.emosation.sevices.FriendService;
-import com.emosation.emosation.sevices.MessageService;
-import com.emosation.emosation.sevices.UserService;
+import com.emosation.emosation.sevices.*;
 import lombok.Getter;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -33,13 +28,17 @@ public class HomeRestController {
     private final UserService userService;
     private final ChatService chatService;
     private final MessageService messageService;
+    private final RedisMessageService redisMessageService;
+    private final RedisChatService redisChatService;
 
     @Autowired
-    public HomeRestController(FriendService friendService,UserService userService,ChatService chatService,MessageService messageService) {
+    public HomeRestController(FriendService friendService, UserService userService, ChatService chatService, MessageService messageService, RedisMessageService redisMessageService, RedisChatService redisChatService) {
         this.userService = userService;
         this.friendService = friendService;
         this.chatService = chatService;
         this.messageService = messageService;
+        this.redisMessageService = redisMessageService;
+        this.redisChatService = redisChatService;
     }
 
     @GetMapping("/main/myfrlist")
@@ -59,7 +58,7 @@ public class HomeRestController {
     @GetMapping("/main/findfr")
     public ResponseEntity<Map<String,Object>> findFriends(@RequestParam String name) {
 
-        System.out.println("찾을 사용자 이름 : " + name );
+
         Optional<UserDTO> user = userService.findUserByName(name);
         Map<String,Object> res = new HashMap<>();
 
@@ -99,19 +98,26 @@ public class HomeRestController {
     @GetMapping("/main/chatlist")
     public ResponseEntity<Map<String,Object>> myRooms(@RequestParam String userEm) {
         Map<String,Object> res = new HashMap<>();
-        Map<Long, Long> unreadCounts = new HashMap<>();
+
         try {
             List<RoomDTO> myrooms = chatService.findMyRoom(userEm);
-
+            List<Map<String, Object>> roomLiWUnreadCnt = new ArrayList<>();
             if(myrooms != null && !myrooms.isEmpty()) {
-                for(RoomDTO room : myrooms){
+                for(RoomDTO room : myrooms) {
                     Long roomId = room.getId();
-                    long unreadCnt = chatService.getUnreadMsg(roomId,userEm);
-                    unreadCounts.put(roomId, unreadCnt);
-                   }
 
-                res.put("unreadCnt",unreadCounts);
-                res.put("rooms",myrooms);
+                    Integer unreadCnt = redisMessageService.getUnreadCnt(userEm, roomId);
+                    unreadCnt = (unreadCnt != null) ? unreadCnt : 0; // null 체크
+
+                    Map<String, Object> roomWUnreadCnt = new HashMap<>();
+                    roomWUnreadCnt.put("room", room);
+                    roomWUnreadCnt.put("unread", unreadCnt);
+
+                    roomLiWUnreadCnt.add(roomWUnreadCnt);
+
+
+                }
+                res.put("rooms",roomLiWUnreadCnt);
                 return ResponseEntity.ok(res);
 
             }
@@ -128,42 +134,67 @@ public class HomeRestController {
 
 
     @GetMapping("/main/check")
-    public ResponseEntity<Map<String,Object>> enterRoom(@RequestParam Long roomId) {
+    public ResponseEntity<Map<String,Object>> enterRoom(@RequestParam Long roomId) { // 기존 채팅방 입장시 redis에 저장된 메세지가 있다면 redis조회 없으면 기존 db조회후 redis에 저장.
 
         Map<String,Object> res = new HashMap<>();
-        List<MessageDTO> msgList = messageService.findByChatRoom(roomId);
 
-        List<UserDTO> userDTOS = chatService.findChatRoomUsers(roomId);
-        if(msgList == null) {
+        List<MessageDTO> rdmsgList = redisMessageService.getMsgListfrRedis(roomId);
+
+        List<UserDTO> userDTOS = rdmsgList.stream().map(MessageDTO::getSender).distinct().collect(Collectors.toList()); // 동일한 값 제거.
+
+
+
+
+
+        // 여기서 해당 채팅을 나누던 친구가 탈퇴시에 조회가되지않음 해결해야함
+       // 여기서 해당 유저가 나갔다는 가정하에 roomInUser 행을 하나 삭제하니 userDTO에 유저 하나만 존재함..
+        // 따라서 redis에서 메세지 조회시에 msgddTO에 redis에 저장된 sender값을 userDTO에 추가후 msgDTO에 userDTO추가함.
+        if(rdmsgList == null) {
           res.put("msg","no rooms for read");
+          return ResponseEntity.ok(res);
         }
-
         res.put("users",userDTOS);
-        res.put("messages",msgList);
-
+        res.put("messages",rdmsgList);
         return ResponseEntity.ok(res);
-
-
     }
 
-    @PatchMapping("/main/updateRead/{roomId}/{em}")
-    public ResponseEntity<String> updateRead(@PathVariable Long roomId, @PathVariable String em) {
+    @PatchMapping("/main/close/{roomId}/{em}")
+    public ResponseEntity<Map<String,Object>> saveMsgToDb(@PathVariable Long roomId) {
 
-        boolean isSetted = messageService.updateReadStat(roomId,em);
+        List<MessageDTO> rmsgList = redisMessageService.getMsgListfrRedis(roomId);
+        Map<String,Object> res = new HashMap<>();
 
-        if(isSetted){
+        try{
+            if(rmsgList != null) {
+                for(MessageDTO rmsg : rmsgList){
+                    Optional<Message> msgLi = messageService.findByRoomAndRdmsId(roomId,rmsg.getId());
 
-          return ResponseEntity.ok("모든 메세지 읽음 완료 ");
-        } else{
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("트랜잭션 실패?");
+                    if(!msgLi.isPresent()) {    /// msgLi에서 rmsgId 로 존재여부를 검증했기때문에 존재하지 않는다면 각각 저장시키면됨.
+                        UserDTO userDTO = rmsg.getSender();
+
+                        messageService.save(rmsg.getId(),rmsg.getRoomId(),userDTO.getEmail(),rmsg.getContent());
+                        System.out.println("메세지 최종 저장완료");
+                    }
+
+                }
+                res.put("message","save  완료");
+                return ResponseEntity.ok(res);
+            } else{
+                res.put("msg","save할  메세지가 없음");
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(res);
+            }
+        } catch (Exception e){
+            res.put("msg", "서버 오류 발생");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
         }
+
 
     }
 
 
 
     @GetMapping("/main/checkrooms/{frEm}/{userEm}")
-    public ResponseEntity<Map<String,Object>> checkRoomsByUsers(@PathVariable String frEm, @PathVariable String userEm) {
+    public ResponseEntity<Map<String,Object>> checkRoomsByUsers(@PathVariable String frEm, @PathVariable String userEm) { // 유저가 친구목록에서 메세지보내기 클릭시 연결된 chatroom검증
 
         Optional<RoomDTO> roomDTO = chatService.findChatroomByUser(userEm,frEm);
         System.out.println("채팅방" + roomDTO);
@@ -173,7 +204,7 @@ public class HomeRestController {
         }
         else{
             Long roomId = roomDTO.get().getId();
-            List<MessageDTO> msgList = messageService.findByChatRoom(roomId);
+            List<MessageDTO> msgList = redisMessageService.getMsgListfrRedis(roomId);
             res.put("messages",msgList);
         }
 

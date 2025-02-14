@@ -1,5 +1,6 @@
 package com.emosation.emosation.websocket;
 
+import com.emosation.emosation.sevices.RedisSessionService;
 import groovy.transform.AutoImplement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -17,14 +18,23 @@ public class WsSessionManager {
 
 
 
-
     private final Map<String, WebSocketSession> userSessions = new ConcurrentHashMap<>();
 
     private final Map<Long, HashSet<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
 
+
+
+
     public void addSession(String userEmail, WebSocketSession session) {
 
-        userSessions.put(userEmail,session);
+        userSessions.put(userEmail,session); // 이메일 키,세션객체 밸류값;
+    }
+
+
+    public Map<String, WebSocketSession> getAllsessions() {
+
+        return userSessions;
+
     }
 
 

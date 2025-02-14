@@ -31,7 +31,7 @@ public class User {
     @Column(name= "pw",nullable = false)
     private String pw;
 
-    @Column(name = "email",nullable = false)
+    @Column(name = "email",nullable = false,unique = true)
     private String email;
 
     @Column(name = "phone",nullable = false)
@@ -39,6 +39,19 @@ public class User {
 
     @Column(name = "profile_pic",nullable = false)
     private String pics;
+
+    @Column(name = "isAdmin")
+    private Boolean isAdmin = false;
+
+    @Column(name = "status",nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    public enum UserStatus {
+        ACTIVE,
+        INACTIVE,
+        DELETED
+    }
 
     @Column(name = "registerd_at",nullable = false)
     private LocalDateTime registerd_at = LocalDateTime.now();

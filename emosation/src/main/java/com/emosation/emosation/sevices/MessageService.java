@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -35,12 +36,13 @@ public class MessageService {
 
 
     @Transactional
-    public void save(Long roomId, String sender, String content) {
+    public void save(Long rdmsId,Long roomId, String sender, String content) {
 
         ChatRoom chatRoom = chatRepository.findById(roomId).orElseThrow(() ->  new RuntimeException("room not found"));
 
         User user = userRepository.findByEmail(sender);
         Message message = new Message();
+        message.setRdmsId(rdmsId);
         message.setSender(user);
         message.setChatRoom(chatRoom);
         message.setContent(content);
@@ -49,31 +51,6 @@ public class MessageService {
     }
 
 
-    public boolean updateReadStat(Long roomId,String userEm){
-
-        ChatRoom chatRoom = chatRepository.findById(roomId).orElseThrow(() ->  new RuntimeException("room not found"));
-
-
-        List<Message> msgList = messageRepository.findByChatRoom(chatRoom);
-
-        try {
-            if(!msgList.isEmpty()){
-                for(Message msg : msgList){
-                    if(!msg.getSender().getEmail().equals(userEm)){
-                        msg.setRead(true);
-                        messageRepository.save(msg);
-                    }
-                }
-                return true;
-            }else{
-                return false;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-
-    }
 
 
 
@@ -82,10 +59,10 @@ public class MessageService {
         ChatRoom chatRoom = chatRepository.findById(roomId).orElseThrow(() ->  new RuntimeException("room not found"));
 
         List<Message> msgList = messageRepository.findByChatRoomOrderBySentedAtAsc(chatRoom);
-        for (Message msg : msgList) {
-            msg.setRead(true);
-            messageRepository.save(msg);
-        }
+//        for (Message msg : msgList) {
+//
+//            messageRepository.save(msg);
+//        }
 
         List<MessageDTO> messageDTOList = msgList.stream()
                 .map(message -> {
@@ -94,7 +71,9 @@ public class MessageService {
                             message.getSender().getId(),
                             message.getSender().getName()
                             ,message.getSender().getEmail(),
-                            message.getSender().getPics()
+                            message.getSender().getPics(),
+                            message.getSender().getRegisterd_at().toString(),
+                            message.getSender().getStatus()
                     );
 
                     // MessageDTO 객체 생성
@@ -103,7 +82,6 @@ public class MessageService {
                             message.getContent(),
                             senderDTO,  // 발신자 정보는 UserDTO로
                             message.getSentedAt(),
-                            message.getRead(),
                             roomId
                     );
                 })
@@ -112,6 +90,17 @@ public class MessageService {
         return messageDTOList;
 
     }
+
+
+    public Optional<Message> findByRoomAndRdmsId(Long roomId, Long rdmsId) {
+
+        ChatRoom chatRoom = chatRepository.findById(roomId).orElseThrow(() ->  new RuntimeException("room not found"));
+        System.out.println("chatroom : " + chatRoom);
+        return messageRepository.findByRdmsIdAndChatRoom(rdmsId,chatRoom);
+    }
+
+
+
 
 
 

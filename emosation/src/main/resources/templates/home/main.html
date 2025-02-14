@@ -19,7 +19,17 @@
         font: inherit;
     }
 
+    @media (max-width: 768px) {
+        div {
+            flex-direction: column; /* 좁은 화면에서 수직 정렬 */
+            width: 100%; /* 부모 영역 가득 채우기 */
+        }
 
+        div > div {
+            max-width: 100%; /* 자식 요소가 부모를 넘지 않도록 */
+            margin-bottom: 20px; /* 요소 간 여백 추가 */
+        }
+    }
 </style>
 <script>
 
@@ -52,9 +62,9 @@
     </div>
 
 
-    <div style="display: flex; width: 100%; justify-content: center; margin-top: 20px; box-sizing: border-box;">
-        <div style="flex-shrink: 0; width: 25%; min-width: 250px; margin-right: 20px;">
-            <table class="table-fill">
+    <div style="display: flex; width: 100%; max-width: 1500px; margin: 0 auto; gap: 20px; box-sizing: border-box; flex-wrap: wrap;">
+        <div style="width: 600px; box-sizing: border-box;">
+            <table class="table-fill" style="width: 100%; table-layout: fixed;">
                 <thead>
                 <tr>
                    <th class="text-center">
@@ -78,8 +88,8 @@
             </table>
         </div>
 
-        <div style="flex-grow: 1; width: 50%; min-width: 500px;">
-        <div id="container" style="justify-content: center">
+        <div style="flex-grow: 1; box-sizing: border-box;">
+        <div id="container" >
             <aside >
                 <header>
                     <input type="text" placeholder="search">
@@ -106,7 +116,7 @@
 <!--                    </div>-->
 <!--                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/1940306/ico_star.png" alt="">-->
                     <div>
-                        <button id="closechat"></button>
+                        <button id="closechat">닫기</button>
                     </div>
                 </header>
                 <ul id="chat">
@@ -123,7 +133,9 @@
         </div>
     </div>
 
-
+    <div>
+        <a>마이 페이지</a>
+    </div>
 
 
 

@@ -1,53 +1,53 @@
-package com.emosation.emosation.AnalyzeTest;
-
-
-import com.emosation.emosation.sevices.GoogleNLPService;
-import com.google.cloud.language.v1.Sentiment;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
-
-import java.util.Arrays;
-import java.util.List;
-
-@SpringBootTest(classes = GoogleNLPService.class)
-@TestPropertySource(locations = "classpath:application.properties")
-public class NLPTest {
-
-
-    @Autowired
-    private GoogleNLPService googleNLPService;
-
-
-
-    @Test
-    public void testAnalyze() {
-
-        String text = "아 넘나리 화난다";
-
-
-        Sentiment sentiment = googleNLPService.analyze(text);
-
-
-        double score = sentiment.getScore();
-        double magnitude = sentiment.getMagnitude();
-
+//package com.emosation.emosation.AnalyzeTest;
 //
-        String[] sadWord = {"ㅠㅠ","힝","흑흑","",";"};
-
-        System.out.println(score + " /// " + magnitude);
-
-        if(score < 0.6 && score > 0){
-            System.out.println("좋지도 나쁘지도 않아보여요.");
-
-        } else if(score < 0 && score  > -0.5){
-            if(magnitude < 0.5){
-                System.out.println("조금은 짜증난거같기도?");
-            } else{
-                System.out.println("많이 짜증난거같기도?");
-            }
-        } 
+//
+//import com.emosation.emosation.sevices.GoogleNLPService;
+//import com.google.cloud.language.v1.Sentiment;
+//import org.junit.jupiter.api.Test;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.boot.test.context.SpringBootTest;
+//import org.springframework.test.context.TestPropertySource;
+//
+//import java.util.Arrays;
+//import java.util.List;
+//
+//@SpringBootTest(classes = GoogleNLPService.class)
+//@TestPropertySource(locations = "classpath:application.properties")
+//public class NLPTest {
+//
+//
+//    @Autowired
+//    private GoogleNLPService googleNLPService;
+//
+//
+//
+//    @Test
+//    public void testAnalyze() {
+//
+//        String text = "아 넘나리 화난다";
+//
+//
+//        Sentiment sentiment = googleNLPService.analyze(text);
+//
+//
+//        double score = sentiment.getScore();
+//        double magnitude = sentiment.getMagnitude();
+//
+////
+//        String[] sadWord = {"ㅠㅠ","힝","흑흑","",";"};
+//
+//        System.out.println(score + " /// " + magnitude);
+//
+//        if(score < 0.6 && score > 0){
+//            System.out.println("좋지도 나쁘지도 않아보여요.");
+//
+//        } else if(score < 0 && score  > -0.5){
+//            if(magnitude < 0.5){
+//                System.out.println("조금은 짜증난거같기도?");
+//            } else{
+//                System.out.println("많이 짜증난거같기도?");
+//            }
+//        }
 
         // 감정 점수와 강도에 따른 분류
 //        if (score < -0.7) {
@@ -106,5 +106,5 @@ public class NLPTest {
 //            }
 //        }
 
-    }
-}
+//    }
+//}

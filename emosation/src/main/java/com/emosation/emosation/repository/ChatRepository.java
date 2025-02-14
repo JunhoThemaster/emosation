@@ -16,5 +16,9 @@ public interface ChatRepository extends JpaRepository<ChatRoom,Long> {
     @Query("SELECT ch FROM ChatRoom ch JOIN ch.roomusers ru WHERE ru.user.id IN :userIds GROUP BY ch.id, ch.openedAt, ch.roomName HAVING COUNT(ru.user.id) = :userCount")
     Optional<ChatRoom> findByRoomusers_UserIdIn(@Param("userIds") List<Long> userIds, @Param("userCount") long userCount);
 
+    @Query("SELECT c FROM ChatRoom c JOIN FETCH c.roomusers WHERE c.id = :roomId")
+    Optional<ChatRoom> cfindByRoomId(@Param("roomId") Long roomId);
+
+
     List<ChatRoom> findByRoomusers(RoomInUsers roomInUsers);
 }

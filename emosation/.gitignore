@@ -39,3 +39,11 @@ out/
 
 ### 외부 설정 파일 ###
 application-ignore.properties
+docker-compose.yml
+prometheus.yml
+.env
+redis.conf
+*.p12
+.dockerignore
+init.sql
+

@@ -1,1 +1,12 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()  // Gradle 플러그인 포탈 추가
+        mavenCentral()  // Maven Central도 추가
+    }
+}
+
+
+
 rootProject.name = 'emosation'
+
+

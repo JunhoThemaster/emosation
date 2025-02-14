@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -30,4 +31,8 @@ public class RoomInUsers {
     @Column(name="joined_at")
     private LocalDateTime joinedAt = LocalDateTime.now();
 
+
+
+    @Column(name="read_info")
+    private BigInteger read = BigInteger.ZERO;
 }

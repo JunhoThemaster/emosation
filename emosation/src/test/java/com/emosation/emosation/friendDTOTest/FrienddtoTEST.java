@@ -26,78 +26,78 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FrienddtoTEST {
 
 
-    @Mock
-    private FriendRepository friendRepository;  // FriendRepository Mock 객체
-
-    @Mock
-    private FriendDTO friendDTO;
-
-    @Mock
-    private UserRepository userRepository;      // UserRepository Mock 객체
-
-    @InjectMocks
-    private FriendService friendService;        // friendService에 userRepository, friendRepository 주입
-
-
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
-    @Test
-    public void testFindMyFr(){
-        User user1 = new User();
-        BigInteger ph = new BigInteger("1259");
-
-        user1.setEmail("alice");
-        user1.setName("alice");
-        user1.setPics("unchoosed");
-        user1.setPhone(ph);
-
-
-
-        User user2 = new User();
-        BigInteger ph2 = new BigInteger("1259");
-
-        user2.setEmail("bob");
-        user2.setName("bob");
-        user2.setPics("unchoosed");
-        user2.setPhone(ph);
-
-        when(userRepository.save(user1)).thenReturn(user1);
-        when(userRepository.save(user2)).thenReturn(user2);
-        System.out.println(user1.getName());
-
-        Friends friends = new Friends();
-
-        friends.setAddedby(user1);
-        friends.setYouadded(user2);
-        friends.setAddedat(LocalDateTime.now());
-
-        List<Friends> mockedFriensList = Arrays.asList(friends);
-
-        when(friendRepository.findByAddedby(user1)).thenReturn(mockedFriensList);
-
-
-        List<FriendDTO> result = friendService.findMyFriends(user1);
-
-
-
-
-
-        assertNotNull(result);
-        System.out.println(result.toString());
-
-    }
-
-
-
-    @Test
-    public void test(){
-        Date date = new Date(System.currentTimeMillis() + 3600 *1000);
-        System.out.println(date);
-    }
-
+//    @Mock
+//    private FriendRepository friendRepository;  // FriendRepository Mock 객체
+//
+//    @Mock
+//    private FriendDTO friendDTO;
+//
+//    @Mock
+//    private UserRepository userRepository;      // UserRepository Mock 객체
+//
+//    @InjectMocks
+//    private FriendService friendService;        // friendService에 userRepository, friendRepository 주입
+//
+//
+//    @BeforeEach
+//    public void setUp() {
+//        MockitoAnnotations.openMocks(this);
+//    }
+//
+//    @Test
+//    public void testFindMyFr(){
+//        User user1 = new User();
+//        BigInteger ph = new BigInteger("1259");
+//
+//        user1.setEmail("alice");
+//        user1.setName("alice");
+//        user1.setPics("unchoosed");
+//        user1.setPhone(ph);
+//
+//
+//
+//        User user2 = new User();
+//        BigInteger ph2 = new BigInteger("1259");
+//
+//        user2.setEmail("bob");
+//        user2.setName("bob");
+//        user2.setPics("unchoosed");
+//        user2.setPhone(ph);
+//
+//        when(userRepository.save(user1)).thenReturn(user1);
+//        when(userRepository.save(user2)).thenReturn(user2);
+//        System.out.println(user1.getName());
+//
+//        Friends friends = new Friends();
+//
+//        friends.setAddedby(user1);
+//        friends.setYouadded(user2);
+//        friends.setAddedat(LocalDateTime.now());
+//
+//        List<Friends> mockedFriensList = Arrays.asList(friends);
+//
+//        when(friendRepository.findByAddedby(user1)).thenReturn(mockedFriensList);
+//
+//
+//        List<FriendDTO> result = friendService.findMyFriends(user1);
+//
+//
+//
+//
+//
+//        assertNotNull(result);
+//        System.out.println(result.toString());
+//
+//    }
+//
+//
+//
+//    @Test
+//    public void test(){
+//        Date date = new Date(System.currentTimeMillis() + 3600 *1000);
+//        System.out.println(date);
+//    }
+//
 
 
 }

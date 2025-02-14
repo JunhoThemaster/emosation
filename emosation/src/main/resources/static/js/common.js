@@ -4,11 +4,15 @@ document.addEventListener('DOMContentLoaded', function (){
 
     if(window.location.pathname === '/main'){
             main();
+    }
 
+    if(window.location.pathname === '/auth/mypage'){
 
     }
 
 });
+
+
 async function register() {
     // 폼 값들 가져오기
     const name = document.getElementById("name").value;
@@ -96,12 +100,23 @@ async function Login(){
 
         if (resp.ok){
             const data = await resp.json();
-            localStorage.setItem("accessToken",data.accessToken);
-            localStorage.setItem("refreshToken",data.refreshToken);
+            if(data.accessToken && data.refreshToken){
+                localStorage.setItem("accessToken",data.accessToken);
+                localStorage.setItem("refreshToken",data.refreshToken);
 
-            alert(data.msg);
-            window.location.href ='/main';
+                alert(data.msg);
+                window.location.href ='/main';
+
+            } else if(data.recovered && data.accessToken){
+                localStorage.removeItem("accessToken");
+
+                localStorage.setItem("accessToken",data.accessToken);
+                window.location.href = '/auth/resetPw';
+
+            }
+
         }else{
+            const data = await resp.json();
             alert(data.msg);
         }
     }catch (error) {
@@ -131,14 +146,16 @@ async function checkLogin() {
         if (response.ok) {
             const data = await response.json(); // 응답 데이터가 있을 경우 처리
             console.log('로그인 상태 확인됨:', data.userEmail);
-            if (data.accessToken) {
+            if (data.accessToken && data.userEmail) {
                 localStorage.setItem('accessToken', data.accessToken);
+                return { loggedIn: true, userEmail: data.userEmail };
+            }else{
+                window.location.href = '/';
+                return { loggedIn: false, userEmail: null };
             }
-
-            return { loggedIn: true, userEmail: data.userEmail };
         } else {
             console.log('인증 실패:', response.status);
-            window.location.href = '/'
+            window.location.href = '/';
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
 
@@ -148,10 +165,12 @@ async function checkLogin() {
         }
     } catch (error) {
         console.error('서버 요청 실패:', error);
+        window.location.href = '/';
         alert("서버 요청 실패");
         return { loggedIn: false};
     }
 }
+window.checkLogin = checkLogin;
 
 async function main(){
     const LoggedIn = await checkLogin();
@@ -315,14 +334,11 @@ let ws = null;
 function connectws(LoggedIn) {// JWT 토큰을 로컬 스토리지에서 가져옴
 
         const token = localStorage.getItem('accessToken');
-        const wsUrl = "ws://localhost:8080/ws-login?Authorization=" + encodeURIComponent('Bearer ' + token);
+        const wsUrl = "wss://13.125.58.11:8443/ws-login?Authorization=" + encodeURIComponent('Bearer ' + token);
         ws = new WebSocket(wsUrl);  // WebSocket 연결 생성
 
         ws.onopen = function() {
             console.log("WebSocket 연결 성공");
-
-            // WebSocket 연결이 성공한 후, 메시지를 수신하도록 설정
-            let encodedEmail = encodeURIComponent(LoggedIn.userEmail);
 
             console.log("WebSocket 연결 상태:", ws.readyState); // 상태 확인 (OPEN -> 1)
 
@@ -337,7 +353,6 @@ function connectws(LoggedIn) {// JWT 토큰을 로컬 스토리지에서 가져�
                                             //  showmsg에는 채팅방을열면 ul요소의 chat-{id} 이런식으로 설정된다. 그렇기에
                                             // 현재 채팅방을 조회하고있지않다는 뜻이기에 출력을 안하게된다 있으면 출력.
                 showmsg(message);
-
 
             }else if(message.type === "status"){ // 메세지 오브젝트에서의 type을 비교함
                 const isSessioninroom = message.doesSheInRoom; // 핸들러에서 보낸 boolean값 담아줌
@@ -360,7 +375,10 @@ function connectws(LoggedIn) {// JWT 토큰을 로컬 스토리지에서 가져�
                 roomList(LoggedIn);
                 if(message.sender === LoggedIn.userEmail){ // 여기서는 메세지를 내가전송했다? 그러면 채팅을 처음 전송시에는 db에 저장된 메세지를 보는게 아닌 sendmessage호출시에 만들어진 요소를 보는것이기에
                                                             // ul의 클래스 이름도 채팅방의 id가 아니게된다 그러므로 첫 전송시 상대가 답장을 하게된다면 내가 열어놓은 채팅방에 메세지가 출력되지 않기때문임.
-                    getroombyroomId(message.roomId);
+                   setTimeout(() =>
+                       {
+                           getroombyroomId(message.roomId);
+                            },100);
                 }
             }
 
@@ -368,11 +386,12 @@ function connectws(LoggedIn) {// JWT 토큰을 로컬 스토리지에서 가져�
 
         ws.onerror = function(error) {
             console.error("WebSocket 오류:", error);
+            window.location.href = "/";
         };
 
         ws.onclose = function() {
             console.log("WebSocket 연결 종료");
-            // 재연결 로직 필요 시 추가 가능
+            window.location.href = "/";
         };
 
 }
@@ -521,7 +540,7 @@ async function sendMessage(receiverEmail) {
 
 }
 
-let unreadCnt = 0;
+
 async function showmsg(msg){
     const roomId = msg.roomId;
 
@@ -579,11 +598,11 @@ async function showmsg(msg){
 
     } else{   // 조회하고 있지않다면 알림을 해줄 목적으로 unreadCnt를 ++ 해준다.
 
-        unreadCnt ++  ;
+
         const span = document.getElementById(`unread-${roomId}`)
         if(span){
             span.className = "note-num";
-            span.innerText = unreadCnt;
+            span.innerText = msg.newMsg;
 
         }
 
@@ -604,7 +623,7 @@ async function typeEffect(element,text,speed){
     setTimeout(() => {
         element.remove();
         console.log("타이핑 요소가 제거되었습니다.");
-    }, 2000); // 1초 후 제거 (필요시 조정 가능)
+    }, 20000); // 1초 후 제거 (필요시 조정 가능)
 
 }
 
@@ -623,24 +642,22 @@ async function roomList(LoggedIn){   // roomlist들을 화면에 보여주기위
                 const ul = document.getElementById("chatList");
                 ul.innerText = "";
                 console.log(data);
-                if(data && data.rooms && data.rooms.length > 0){
+                if(data.rooms && data.rooms.length > 0){
 
 
                     data.rooms.forEach(chatroom =>{
-                        const roomName = chatroom.roomName;
-                        const unreadcnt = data.unreadCnt[chatroom.id];
+                        const roomName = chatroom.room.roomName;
+                        const unreadCnt = chatroom.unread;
 
                         const span = document.createElement("span");
                         span.className = "note-num";
-                        span.id = `unread-${chatroom.id}` ;
-                        if(unreadCnt === 0){
-                            span.className = "";
+                        span.id = `unread-${chatroom.room.id}` ;
 
-                        } else{
-                            span.innerText = unreadcnt + unreadcnt;
-                            span.className = "note-num";
 
-                        }
+
+                        span.className = "note-num";
+                        span.innerText = unreadCnt;
+
 
                         console.log(roomName);
 
@@ -656,7 +673,7 @@ async function roomList(LoggedIn){   // roomlist들을 화면에 보여주기위
                         a.href = "#";
                         a.addEventListener("click",async (e) => {
                             e.preventDefault();
-                            getroombyroomId(chatroom.id);
+                            getroombyroomId(chatroom.room.id);
                         })
 
 
@@ -670,11 +687,11 @@ async function roomList(LoggedIn){   // roomlist들을 화면에 보여주기위
 
                     })
 
-                };
+                }else{
+                    const ul = document.getElementById("chatList");
+                    ul.innerText = data.msg;
+                }
 
-            } else{
-                const ul = document.getElementById("chatList");
-                ul.innerText = data.msg;
             }
 
 
@@ -701,8 +718,10 @@ async function getroombyroomId(roomId){
         if (resp.ok){
 
             const data = await resp.json()
-
+            var emails= null;
+            var receiver = null;
             if(data.messages && data.users){
+
                 console.log(data.users);
                 console.log(data.messages);
                 const span = document.getElementById(`unread-${roomId}`);
@@ -712,14 +731,16 @@ async function getroombyroomId(roomId){
                 sbox.style.display = "block";
                 const ul = document.getElementById("chat");
                 const closebtn = document.getElementById("closechat");
+                closebtn.innerText = "닫기";
 
 
 
                 setTimeout(()=>{
                     ul.scrollTop = ul.scrollHeight;
                 },100);
-                const emails = data.users.map(users => users.email);
-                const receiver = emails.filter(trgt => trgt !== loggedIn.userEmail);
+
+                emails = data.users.map(users => users.email);
+                receiver = emails.filter(trgt => trgt !== loggedIn.userEmail);
 
 
                 ul.className= `chat-${roomId}`;
@@ -727,7 +748,7 @@ async function getroombyroomId(roomId){
 
                 console.log(receiver);
                 if (receiver) {
-                    alert(`Receiver: ${receiver}`); // 수신자 이메일을 확인
+                    alert(`Receiver: ${receiver}`); // 수신자 이메일을 확인 , 근데 여기서도 첫 메세지면 sender의 email만 존재하니 receiver는 없음 없을때
                     const trgt = document.getElementById("trgt");
                     trgt.onclick = function (ev) {
                         ev.preventDefault();
@@ -817,34 +838,47 @@ async function openChatBox(LoggedIn,trgtEm){
 async function closeChat(roomId,em){
 
 
-    const resp = await fetch(`/main/updateRead/${roomId}/${em}`,{
+    const resp = await fetch(`/main/close/${roomId}/${em}`,{
         method : 'PATCH',
         headers : {'Content-Type' : 'application/json'}
     });
+    updateChatbox(roomId);
+    closeMsg(roomId,em)
     if(resp.ok){
-        console.log(roomId,em);
-
-        const ormsg = {
-            type : "close",
-            roomId : roomId,
-            semail : em,
-        }
-
-        ws.send(JSON.stringify(ormsg));
-
-        const ul = document.querySelector(`ul.chat-${roomId}`);// roomId를 사용해 각 채팅방별 ul을 찾아야 함
-        if (ul) {
-            ul.className = "";
-            ul.innerHTML = ""; // 해당 채팅방의 메시지를 비움
-            stopObserver();
-        } else {
-            console.log(`채팅방 ID ${roomId}에 해당하는 ul을 찾을 수 없습니다.`);
-        }
-
+        return true;
     }else{
        const error = await resp.json();
        console.log("error : " + error);
     }
+
+
+}
+
+
+function updateChatbox(roomId){
+    const ul = document.querySelector(`ul.chat-${roomId}`);// roomId를 사용해 각 채팅방별 ul을 찾아야 함
+    if (ul) {
+        ul.className = "";
+        ul.innerHTML = ""; // 해당 채팅방의 메시지를 비움
+        const sbox = document.getElementById("sendbox");
+
+        sbox.style.display = "none";
+
+    } else {
+        console.log(`채팅방 ID ${roomId}에 해당하는 ul을 찾을 수 없습니다.`);
+    }
+    return true;
+
+}
+
+function closeMsg(roomId,em){
+    const ormsg = {
+        type : "close",
+        roomId : roomId,
+        semail : em,
+    };
+    stopObserver();
+    ws.send(JSON.stringify(ormsg));
 
 
 }
@@ -885,7 +919,7 @@ function createMessageElement(msg, isSender) {
 
         return li;
 
-    } else{
+    } else {
 
         const div = document.createElement("div");
         div.className = "entete";
@@ -905,30 +939,15 @@ function createMessageElement(msg, isSender) {
         div2.innerText = msg.content;
 
         const div3 = document.createElement("div");
-
-
-
-
-
-
-
-
-        // 구조화된 요소 추가
-
         div.appendChild(h3);
         div.appendChild(h2);
         li.appendChild(div);
         li.appendChild(div1);
         li.appendChild(div2);
         li.appendChild(div3);
-
         return li;
 
-
-
     }
-
-
 
 }
 
@@ -945,8 +964,144 @@ function renderMessages(messages, chatlist, LoggedIn) {
     });
 }
 
+async function resetPw(){
+
+    const pw = document.getElementById("pw").value;
+
+    const repw = document.getElementById("repw").value;
+
+    if(pw !== repw){
+
+        alert("비밀번호가 일치하지 않습니다")
+        return;
+    }
 
 
+    const token = localStorage.getItem("accessToken");
+    const body = JSON.stringify({pw:pw});
+
+
+    const resp = await fetch("/auth/newPw",{
+        method : 'PATCH',
+        headers : { 'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'},
+        body: body
+    });
+
+    if(resp.ok){
+
+        const data = await resp.json();
+
+        alert(data.msg);
+
+        window.location.href = "/";
+
+
+    }else if(resp.status === 400){
+        const data = await resp.json();
+
+        alert(data.msg);
+        window.location.href = "/auth/resetPw";
+
+    }else if(resp.status === 500){
+
+        const data = await resp.json();
+        alert(data.msg);
+
+        window.location.href = "/auth/resetPw";
+
+    }
+
+
+}
+
+async function gotomypage(){
+
+   const LoggedIn = await checkLogin();
+
+   if(LoggedIn){
+       window.location.href = "/auth/mypage";
+   }else{
+       alert("다시 로그인 해주세요!");
+       window.location.href = "/";
+   }
+
+}
+
+
+async function myPage(){
+    const loggedIn = await checkLogin();
+
+    if(loggedIn){
+
+        const userEm = loggedIn.userEmail;
+
+        const resp = await fetch("/auth/api/mypage/",{
+            method : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ userEm: userEm })
+
+        });
+
+
+        if(resp.ok){
+
+            const data = await resp.json();
+
+            if(data.userEm){
+                renderMyPage(data);
+
+            }else{data.msg}{
+                alert("error :" +data.msg);
+                window.location.href ="/";
+            }
+        }
+    }else{
+        alert("로그인 시간 만료");
+        window.location.href = "/";
+
+    }
+}
+
+
+function renderMyPage(data){
+    const tbody = document.getElementById("my-info");
+
+    tbody.innerHTML = "";
+    data.forEach((dat) => {
+
+
+        const tr =  document.createElement("tr");
+
+        const td1 = document.createElement("td");
+        const td2 = document.createElement("td");
+        const td3 = document.createElement("td");
+        const td4 = document.createElement("td");
+        const td5 = document.createElement("td");
+
+        const btn = document.createElement("button");
+        btn.innerText = "삭제";
+
+
+        td1.innerText = dat.userPhone;
+        td2.innerText = dat.userName;
+        td3.innerText = dat.userEm;
+        td4.innerText = dat.date;
+        td5.appendChild(btn);
+
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tr.appendChild(td3);
+        tr.appendChild(td4);
+        tr.appendChild(td5);
+
+
+        tbody.appendChild(tr);
+
+    })
+
+
+}
 
 
 function formatTime(dateString) {

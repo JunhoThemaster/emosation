@@ -5,6 +5,7 @@ import com.emosation.emosation.model.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.checkerframework.checker.units.qual.C;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,10 @@ public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+
+    @Column(name = "rdms_id", nullable = true)
+    private Long rdmsId;
 
 
     @ManyToOne
@@ -35,9 +40,6 @@ public class Message {
     @Column(name = "sented_at")
     private LocalDateTime sentedAt = LocalDateTime.now();
 
-
-    @Column(name = "read", nullable = true )
-    private Boolean read = false;
 
 
 
