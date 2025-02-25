@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function (){
     }
 
     if(window.location.pathname === '/auth/mypage'){
-
+        myPage();
     }
 
 });
@@ -1034,24 +1034,22 @@ async function myPage(){
 
     if(loggedIn){
 
-        const userEm = loggedIn.userEmail;
-
-        const resp = await fetch("/auth/api/mypage/",{
-            method : 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ userEm: userEm })
-
+        const token = localStorage.getItem('accessToken');
+        const resp = await fetch("/auth/api/mypage", {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
 
 
         if(resp.ok){
-
             const data = await resp.json();
 
             if(data.userEm){
                 renderMyPage(data);
 
-            }else{data.msg}{
+            }else{
                 alert("error :" +data.msg);
                 window.location.href ="/";
             }
@@ -1068,8 +1066,7 @@ function renderMyPage(data){
     const tbody = document.getElementById("my-info");
 
     tbody.innerHTML = "";
-    data.forEach((dat) => {
-
+    if(data){
 
         const tr =  document.createElement("tr");
 
@@ -1077,30 +1074,21 @@ function renderMyPage(data){
         const td2 = document.createElement("td");
         const td3 = document.createElement("td");
         const td4 = document.createElement("td");
-        const td5 = document.createElement("td");
 
-        const btn = document.createElement("button");
-        btn.innerText = "삭제";
-
-
-        td1.innerText = dat.userPhone;
-        td2.innerText = dat.userName;
-        td3.innerText = dat.userEm;
-        td4.innerText = dat.date;
-        td5.appendChild(btn);
+        td1.innerText = data.userPhone;
+        td2.innerText = data.userName;
+        td3.innerText = data.userEm;
+        td4.innerText = data.date;
 
         tr.appendChild(td1);
         tr.appendChild(td2);
         tr.appendChild(td3);
         tr.appendChild(td4);
-        tr.appendChild(td5);
 
 
         tbody.appendChild(tr);
 
-    })
-
-
+    }
 }
 
 

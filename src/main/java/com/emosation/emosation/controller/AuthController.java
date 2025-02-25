@@ -1,6 +1,7 @@
 package com.emosation.emosation.controller;
 
 
+import com.emosation.emosation.Util.JwtUtil;
 import com.emosation.emosation.model.user.User;
 import com.emosation.emosation.sevices.UserService;
 import org.springframework.dao.DataAccessException;
@@ -20,10 +21,12 @@ public class AuthController {
 
 
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
 
-    public AuthController(UserService userService) {
+    public AuthController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
 
@@ -39,17 +42,19 @@ public class AuthController {
     public String mypage(){
 
 
-        return "/mypage/mypage";
+        return "mypage/mypage";
     }
 
 
 
 
     @PostMapping("/auth/api/mypage")
-    public ResponseEntity<Map<String, Object>> mypage(@RequestBody Map<String, String> req) {
+    public ResponseEntity<Map<String, Object>> mypage(@RequestHeader("Authorization") String auth) {
 
-        String userEm = req.get("userEm");
+        String token = auth.substring("Bearer ".length());
 
+        String userEm = jwtUtil.extId(token);
+        System.out.printf("마이페이지 조회",userEm);
 
         Map<String, Object> res = new HashMap<>();
         try{

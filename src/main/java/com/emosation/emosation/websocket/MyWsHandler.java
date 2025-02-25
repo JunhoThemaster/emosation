@@ -236,7 +236,9 @@ public class MyWsHandler implements WebSocketHandler {
 
     public void handleTypeClose(WebSocketSession session,JsonObject payload) throws IOException {
         Long roomId = payload.get("roomId").getAsLong();
+        System.out.printf("closing room :",roomId);
         String sem = payload.get("semail").getAsString(); // 채팅방 닫기를 누른 사람.
+        System.out.printf("closing user:", sem);
         logger.debug("User closed",roomId,sem);
         JsonObject response = new JsonObject();
         response.addProperty("type","status");
@@ -246,7 +248,9 @@ public class MyWsHandler implements WebSocketHandler {
         System.out.println("룸에서 현재 세션 삭제"  +sem);
         if(wsSessionManager.getRoomSession(roomId)){
             WebSocketSession trgtSession = wsSessionManager.getSessionFromRoom(roomId);
-            trgtSession.sendMessage(new TextMessage(response.toString()));
+            if(trgtSession != null) {
+                trgtSession.sendMessage(new TextMessage(response.toString()));
+            }
         }
 
     }
