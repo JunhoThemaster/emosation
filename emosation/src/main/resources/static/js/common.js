@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function (){
     }
 
     if(window.location.pathname === '/auth/mypage'){
-
+        myPage();
     }
 
 });
@@ -350,8 +350,7 @@ function connectws(LoggedIn) {// JWT 토큰을 로컬 스토리지에서 가져�
             // console.log("서버로부터 받은 메시지:", message);
 
             if(message.type === "message"){ //type이 그냥 메세지인경우는 상대세션의 존재여부에 따른 검증을 해줄 showmsg 호출
-                                            //  showmsg에는 채팅방을열면 ul요소의 chat-{id} 이런식으로 설정된다. 그렇기에
-                                            // 현재 채팅방을 조회하고있지않다는 뜻이기에 출력을 안하게된다 있으면 출력.
+                                            //  showmsg에는 채팅방을열면 ul요소의 Id 값이 chat-{id} 이런식으로 설정되게 해줬다 .
                 showmsg(message);
 
             }else if(message.type === "status"){ // 메세지 오브젝트에서의 type을 비교함
@@ -1034,24 +1033,22 @@ async function myPage(){
 
     if(loggedIn){
 
-        const userEm = loggedIn.userEmail;
-
-        const resp = await fetch("/auth/api/mypage/",{
-            method : 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ userEm: userEm })
-
+        const token = localStorage.getItem('accessToken');
+        const resp = await fetch("/auth/api/mypage", {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
 
 
         if(resp.ok){
-
             const data = await resp.json();
 
             if(data.userEm){
                 renderMyPage(data);
 
-            }else{data.msg}{
+            }else{
                 alert("error :" +data.msg);
                 window.location.href ="/";
             }
@@ -1068,8 +1065,7 @@ function renderMyPage(data){
     const tbody = document.getElementById("my-info");
 
     tbody.innerHTML = "";
-    data.forEach((dat) => {
-
+    if(data){
 
         const tr =  document.createElement("tr");
 
@@ -1077,30 +1073,21 @@ function renderMyPage(data){
         const td2 = document.createElement("td");
         const td3 = document.createElement("td");
         const td4 = document.createElement("td");
-        const td5 = document.createElement("td");
 
-        const btn = document.createElement("button");
-        btn.innerText = "삭제";
-
-
-        td1.innerText = dat.userPhone;
-        td2.innerText = dat.userName;
-        td3.innerText = dat.userEm;
-        td4.innerText = dat.date;
-        td5.appendChild(btn);
+        td1.innerText = data.userPhone;
+        td2.innerText = data.userName;
+        td3.innerText = data.userEm;
+        td4.innerText = data.date;
 
         tr.appendChild(td1);
         tr.appendChild(td2);
         tr.appendChild(td3);
         tr.appendChild(td4);
-        tr.appendChild(td5);
 
 
         tbody.appendChild(tr);
 
-    })
-
-
+    }
 }
 
 

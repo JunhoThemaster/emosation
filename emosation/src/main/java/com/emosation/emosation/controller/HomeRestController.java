@@ -143,9 +143,6 @@ public class HomeRestController {
         List<UserDTO> userDTOS = rdmsgList.stream().map(MessageDTO::getSender).distinct().collect(Collectors.toList()); // 동일한 값 제거.
 
 
-
-
-
         // 여기서 해당 채팅을 나누던 친구가 탈퇴시에 조회가되지않음 해결해야함
        // 여기서 해당 유저가 나갔다는 가정하에 roomInUser 행을 하나 삭제하니 userDTO에 유저 하나만 존재함..
         // 따라서 redis에서 메세지 조회시에 msgddTO에 redis에 저장된 sender값을 userDTO에 추가후 msgDTO에 userDTO추가함.

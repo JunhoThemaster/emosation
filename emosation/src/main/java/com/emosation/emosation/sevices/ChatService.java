@@ -65,6 +65,8 @@ public class ChatService {
 
                ChatRoom chatRoom = existingRoom.get();
 
+
+
                List<UserDTO> userDTOs = chatRoom.getRoomusers().stream()
                        .map(roomInUser -> new UserDTO(roomInUser.getUser().getId(),
                                roomInUser.getUser().getEmail(),

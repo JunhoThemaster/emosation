@@ -81,14 +81,16 @@ public class MyWsHandler implements WebSocketHandler {
         JsonObject jsonMessage = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
         JsonObject payload = jsonMessage.has("payload") ? jsonMessage.getAsJsonObject("payload") : null;
         String type = jsonMessage.get("type").getAsString();
-        String time = LocalTime.now().toString();
+
         if("message".equals(type)){
             if (payload != null) {
+
                 String destination = jsonMessage.get("destination").getAsString();
                 String recipientEmail = destination.substring(destination.lastIndexOf('/') + 1);
                 String recipientEmail1 = URLDecoder.decode(recipientEmail, StandardCharsets.UTF_8.name());
                 String sender = payload.get("sender").getAsString();
                 String content = payload.get("content").getAsString();
+
                 WebSocketSession targetSession = wsSessionManager.getSession(recipientEmail1);
                 Long roomId1 = redisChatService.getRoomIdFromRedis(sender,recipientEmail1);
                 Optional<RoomDTO> roomDTO = chatService.getRoomById(roomId1);
@@ -97,14 +99,18 @@ public class MyWsHandler implements WebSocketHandler {
                                                                                                      // 그래서 순환참조가 일어났음... 그래서 userdto chatroomdto 를 만들어서 필요치 않는 관계필드를 제외시키고 직렬화시키니 해결
                 if(!roomDTO.isPresent()){
                     RoomDTO roomDTO1 = chatService.createOneOnOneChatRoom(sender,recipientEmail1);
+
                     JsonObject msgObj2 = new JsonObject();
                     msgObj2.addProperty("type","newOne");
                     msgObj2.addProperty("sender",sender);
                     msgObj2.addProperty("roomId",roomDTO1.getId());
+
                     redisMessageService.saveMsgtoRedis(sender, roomDTO1.getId(), content,LocalDateTime.now());
 
                     session.sendMessage(new TextMessage(msgObj2.toString()));
+
                     if(targetSession != null){
+
                         handleMsgForTrgtNotNull(targetSession,roomDTO1.getId(),recipientEmail1,sender,payload,msgObj2);
                     }
 
@@ -115,13 +121,20 @@ public class MyWsHandler implements WebSocketHandler {
                     boolean isReceiverInRoom = Boolean.TRUE.equals(res.get("isReceiverInRoom"));
                     JsonObject msgObj3 = new JsonObject();
                     if(!isReceiverInRoom){
+
                         chatService.addRoomInUser(recipientEmail1,roomDTO.get().getId());
+
                         msgObj3.addProperty("type","newOne");
+
                         msgObj3.addProperty("sender",sender);
+
                         msgObj3.addProperty("roomId",roomDTO.get().getId());
+
                         targetSession.sendMessage(new TextMessage(msgObj3.toString()));
                     }
+
                     boolean isSessionRoom = wsSessionManager.isSessionInRoom(roomDTO.get().getId(),targetSession);
+
                     redisMessageService.resetUnreadCnt(sender,roomDTO.get().getId());
 
                     if (targetSession != null && isSessionRoom) {
@@ -130,6 +143,7 @@ public class MyWsHandler implements WebSocketHandler {
 
                         System.out.println("메시지를 전송했습니다. 수신자 이메일: " + recipientEmail1);
                     } else if(targetSession != null){
+
                         handleMsgForTrgtNotNull(targetSession,roomDTO.get().getId(),recipientEmail1,sender,payload,null);
                     }
 
@@ -140,13 +154,21 @@ public class MyWsHandler implements WebSocketHandler {
             }
         } else if ("enterRoom".equals(type)) { // 세션이 채팅방에 입장...
             JsonObject msgObj = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
+
             System.out.println(msgObj);
+
             handleTypeEnter(session,msgObj);
-        } else if ("close".equals(type)) {  // 상대방이 채팅방을 닫기 버튼을 눌렀을때 전송되는 메세지의타입 = close 라서
+
+        } else if ("close".equals(type)) {
+            // 상대방이 채팅방을 닫기 버튼을 눌렀을때 전송되는 메세지의타입 = close 로 설정함.
             JsonObject msgObj = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
+
             handleTypeClose(session,msgObj);
+
         } else if("to-All".equals(type)) {
+
             JsonObject msgObj = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
+
             adminSays(payload);
 
         }
@@ -236,7 +258,9 @@ public class MyWsHandler implements WebSocketHandler {
 
     public void handleTypeClose(WebSocketSession session,JsonObject payload) throws IOException {
         Long roomId = payload.get("roomId").getAsLong();
+        System.out.printf("closing room :",roomId);
         String sem = payload.get("semail").getAsString(); // 채팅방 닫기를 누른 사람.
+        System.out.printf("closing user:", sem);
         logger.debug("User closed",roomId,sem);
         JsonObject response = new JsonObject();
         response.addProperty("type","status");
@@ -246,7 +270,9 @@ public class MyWsHandler implements WebSocketHandler {
         System.out.println("룸에서 현재 세션 삭제"  +sem);
         if(wsSessionManager.getRoomSession(roomId)){
             WebSocketSession trgtSession = wsSessionManager.getSessionFromRoom(roomId);
-            trgtSession.sendMessage(new TextMessage(response.toString()));
+            if(trgtSession != null) {
+                trgtSession.sendMessage(new TextMessage(response.toString()));
+            }
         }
 
     }

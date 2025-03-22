@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.emosation.emosation.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.emosation.emosation.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/emosation.iml" filepath="$PROJECT_DIR$/.idea/emosation.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/emosation.emosation.main.iml" filepath="$PROJECT_DIR$/.idea/modules/emosation.emosation.main.iml" />
     </modules>
   </component>
 </project>
