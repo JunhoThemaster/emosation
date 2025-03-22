@@ -49,3 +49,4 @@ init.sql
 logs/
 *.log
 "logs/*.log" 
+emosation/logs/*
