@@ -289,11 +289,11 @@
      시나리오는 이렇습니다.
      동일한 회원정보를 Jmeter를 이용해  /auth/register로 1000개의 요청을 보냅니다.
            
-         ![스크린샷 2025-01-06 185414](https://github.com/user-attachments/assets/8caa90f5-52c4-41ab-be03-6d61a5c9dd90)
+        ![스크린샷 2025-01-06 185414](https://github.com/user-attachments/assets/8caa90f5-52c4-41ab-be03-6d61a5c9dd90)
        
        
        
-         ![스크린샷 2025-01-07 171024](https://github.com/user-attachments/assets/c43f8f25-3a9c-4621-8204-ed8deac2b10a)
+        ![스크린샷 2025-01-07 171024](https://github.com/user-attachments/assets/c43f8f25-3a9c-4621-8204-ed8deac2b10a)
         - 결과:
           http_request_seconds_sum : 모든 요청의 응답시간을 합한값입니다.
           그래서 697/1000 = 0.697 이기에 1개의 요청에 0.697초가 소요되었다는 얘기입니다.
