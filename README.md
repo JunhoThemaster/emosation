@@ -107,6 +107,12 @@
 
 
 
+# ERD
+ ![image](https://github.com/user-attachments/assets/a872df13-c4f1-46c5-81f2-e0f0e2796712)
+
+
+
+
 
 # 어플리케이션 주요 구현 기능
  - 기본적인 CRUD 를 통한 객체의 삭제 및 쓰기, 읽기 , 갱신 구현
