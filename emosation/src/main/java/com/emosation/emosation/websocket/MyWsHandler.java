@@ -10,6 +10,7 @@ import com.emosation.emosation.sevices.*;
 
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import com.nimbusds.jose.shaded.gson.JsonParser;
+import jakarta.mail.Session;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,108 +80,90 @@ public class MyWsHandler implements WebSocketHandler {
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
 
         JsonObject jsonMessage = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
+
         JsonObject payload = jsonMessage.has("payload") ? jsonMessage.getAsJsonObject("payload") : null;
+
         String type = jsonMessage.get("type").getAsString();
 
-        if("message".equals(type)){
-            if (payload != null) {
+        if("message".equals(type) && payload != null) {
 
-                String destination = jsonMessage.get("destination").getAsString();
-                String recipientEmail = destination.substring(destination.lastIndexOf('/') + 1);
-                String recipientEmail1 = URLDecoder.decode(recipientEmail, StandardCharsets.UTF_8.name());
-                String sender = payload.get("sender").getAsString();
-                String content = payload.get("content").getAsString();
+            handleRoomExceptionAndMessage(session,payload,jsonMessage);
 
-                WebSocketSession targetSession = wsSessionManager.getSession(recipientEmail1);
-                Long roomId1 = redisChatService.getRoomIdFromRedis(sender,recipientEmail1);
-                Optional<RoomDTO> roomDTO = chatService.getRoomById(roomId1);
-                                                                                                    // 클라이언트 응답 본문이 챗룸에는 다수의 roominuser를 참조 user는 roominuser를 통해 다수의 chatroom과 연결
-                                                                                                     // 이때 chatroom 객체의 정보를 json 직렬화시에 roominuser를 통해 user를 연결 user는 또 roominuser를 조회하고 chatroom을 연결
-                                                                                                     // 그래서 순환참조가 일어났음... 그래서 userdto chatroomdto 를 만들어서 필요치 않는 관계필드를 제외시키고 직렬화시키니 해결
-                if(!roomDTO.isPresent()){
-                    RoomDTO roomDTO1 = chatService.createOneOnOneChatRoom(sender,recipientEmail1);
+        } else if ("enterRoom".equals(type) && payload != null) {
+            // 세션이 채팅방에 입장...
 
-                    JsonObject msgObj2 = new JsonObject();
-                    msgObj2.addProperty("type","newOne");
-                    msgObj2.addProperty("sender",sender);
-                    msgObj2.addProperty("roomId",roomDTO1.getId());
+            handleTypeEnter(session,jsonMessage);
 
-                    redisMessageService.saveMsgtoRedis(sender, roomDTO1.getId(), content,LocalDateTime.now());
-
-                    session.sendMessage(new TextMessage(msgObj2.toString()));
-
-                    if(targetSession != null){
-
-                        handleMsgForTrgtNotNull(targetSession,roomDTO1.getId(),recipientEmail1,sender,payload,msgObj2);
-                    }
-
-                } else{
-                    wsSessionManager.addRoomSession(roomDTO.get().getId(),session);
-                    Map<String,Object> res = chatService.checkRoomInUsers(sender,recipientEmail1,roomDTO.get().getId());
-
-                    boolean isReceiverInRoom = Boolean.TRUE.equals(res.get("isReceiverInRoom"));
-                    JsonObject msgObj3 = new JsonObject();
-                    if(!isReceiverInRoom){
-
-                        chatService.addRoomInUser(recipientEmail1,roomDTO.get().getId());
-
-                        msgObj3.addProperty("type","newOne");
-
-                        msgObj3.addProperty("sender",sender);
-
-                        msgObj3.addProperty("roomId",roomDTO.get().getId());
-
-                        targetSession.sendMessage(new TextMessage(msgObj3.toString()));
-                    }
-
-                    boolean isSessionRoom = wsSessionManager.isSessionInRoom(roomDTO.get().getId(),targetSession);
-
-                    redisMessageService.resetUnreadCnt(sender,roomDTO.get().getId());
-
-                    if (targetSession != null && isSessionRoom) {
-
-                        handleMsgForTrgtIsReading(targetSession,payload,roomDTO.get().getId(),sender,recipientEmail1);
-
-                        System.out.println("메시지를 전송했습니다. 수신자 이메일: " + recipientEmail1);
-                    } else if(targetSession != null){
-
-                        handleMsgForTrgtNotNull(targetSession,roomDTO.get().getId(),recipientEmail1,sender,payload,null);
-                    }
-
-                }
-            } else {
-                // payload가 없을 경우 처리
-                System.out.println("메시지 payload가 존재하지 않습니다.");
-            }
-        } else if ("enterRoom".equals(type)) { // 세션이 채팅방에 입장...
-            JsonObject msgObj = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
-
-            System.out.println(msgObj);
-
-            handleTypeEnter(session,msgObj);
-
-        } else if ("close".equals(type)) {
+        } else if ("close".equals(type) && payload != null) {
             // 상대방이 채팅방을 닫기 버튼을 눌렀을때 전송되는 메세지의타입 = close 로 설정함.
-            JsonObject msgObj = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
 
-            handleTypeClose(session,msgObj);
 
-        } else if("to-All".equals(type)) {
+            handleTypeClose(session,jsonMessage);
 
-            JsonObject msgObj = JsonParser.parseString(message.getPayload().toString()).getAsJsonObject();
+        } else if("to-All".equals(type) && payload != null) {
 
             adminSays(payload);
 
         }
 
+    }
+
+
+    public void handleRoomExceptionAndMessage(WebSocketSession session, JsonObject payload,JsonObject jsonMessage ) throws Exception {
+
+        String sender = payload.get("sender").getAsString();
+        String receiver =  URLDecoder.decode(jsonMessage.get("destination").getAsString(), StandardCharsets.UTF_8);
+        String content = payload.get("contnet").getAsString();
+
+        Long roomId = redisChatService.getRoomIdFromRedis(sender,receiver);
+
+        Optional<RoomDTO> roomDTO = chatService.getRoomById(roomId);
+
+        if(!roomDTO.isPresent()) {
+            roomDTO = Optional.ofNullable(createChatroom(sender, receiver, session));
+        }
+
+        WebSocketSession recSession = wsSessionManager.getSession(receiver);
+
+        boolean isSessionInRoom = wsSessionManager.isSessionInRoom(roomDTO.get().getId(),recSession);
+
+        if(isSessionInRoom){
+            handleMsgForTrgtIsReading(recSession, roomDTO.get().getId(),receiver , payload.get("sender").getAsString(),payload);
+        }else {
+            handleMsgForTrgtNotNull(recSession,roomDTO.get().getId(), receiver, payload.get("sender").getAsString(), payload);
+        }
+    }
+
+
+    public RoomDTO createChatroom(String sender, String receiver,WebSocketSession session) throws Exception {
+        RoomDTO roomDTO = chatService.createOneOnOneChatRoom(sender, receiver);
+        WebSocketSession trgtSession = wsSessionManager.getSession(receiver);
+
+        announceToClientForNewOne(session,sender,trgtSession,roomDTO);
+
+        return roomDTO;
 
     }
 
-    public void handleMsgForTrgtNotNull(WebSocketSession targetSession,Long roomId,String recipientEmail1,String sender,JsonObject payload,JsonObject msgObj2) throws IOException{
+    private void announceToClientForNewOne(WebSocketSession session, String sender, WebSocketSession trgtSession,RoomDTO roomDTO) throws Exception{
+        JsonObject msgObj = new JsonObject();
+        msgObj.addProperty("type", "newOne");
+        msgObj.addProperty("sender", sender);
+        msgObj.addProperty("roomId", roomDTO.getId());
+
+        trgtSession.sendMessage(new TextMessage(msgObj.toString()));
+        session.sendMessage(new TextMessage(msgObj.toString()));
+
+    }
+
+
+
+    public void handleMsgForTrgtNotNull(WebSocketSession targetSession,Long roomId,String recipientEmail1,String sender,JsonObject payload ) throws IOException{
         redisMessageService.setUnreadCnt(recipientEmail1,roomId,0);
         redisMessageService.incrementUnreadCnt(recipientEmail1 ,roomId);
 
         JsonObject msgObj = new JsonObject();
+
         msgObj.addProperty("type","message");
         msgObj.addProperty("roomId",roomId);
         msgObj.addProperty("sender",sender);
@@ -189,13 +172,14 @@ public class MyWsHandler implements WebSocketHandler {
         msgObj.addProperty("time",LocalDateTime.now().toString());
         msgObj.addProperty("newMsg",redisMessageService.getUnreadCnt(recipientEmail1,roomId));
         redisMessageService.saveMsgtoRedis(sender,roomId, payload.get("content").getAsString(),LocalDateTime.now());
-        targetSession.sendMessage(new TextMessage(msgObj.toString()));
-        if(msgObj2!=null) {
-            targetSession.sendMessage(new TextMessage(msgObj2.toString()));
-        }
+
+
+
+        targetSession.sendMessage(new TextMessage(msgObj.toString())); // 이후 메세지 전달.
+
 
     }
-    public void handleMsgForTrgtIsReading(WebSocketSession targetSession,JsonObject payload,Long roomId,String sender,String recipientEmail1) throws IOException{
+    private void handleMsgForTrgtIsReading(WebSocketSession targetSession,Long roomId,String recipientEmail1,String sender,JsonObject payload) throws IOException{
         String sentimentResult = openAiService.genRepsAsyn(payload.get("content").getAsString()); // 기존 googleNLP를 이용하여 긍정부정 강도 점수로 sentiment 객체를 만들어주었는데 이젠 그럴필요없다.
         JsonObject msgObj = new JsonObject();
         msgObj.addProperty("type","message");
@@ -211,12 +195,13 @@ public class MyWsHandler implements WebSocketHandler {
 
     }
 
-    public void handleTypeEnter(WebSocketSession session,JsonObject payload) throws IOException {
+    private void handleTypeEnter(WebSocketSession session,JsonObject payload) throws IOException {
         Long roomId = payload.get("roomId").getAsLong();
         String sender = payload.get("sender").getAsString();
         logger.debug("Users EnterRoom {}: {}", roomId, sender);
         Map<String,String> users = redisChatService.redisGetUserByChatroom(roomId);
         String receiver = null;
+
         if(users != null){
             String user1 = users.get("user1");
             String user2 = users.get("user2");
@@ -229,10 +214,12 @@ public class MyWsHandler implements WebSocketHandler {
             logger.debug("There's no user for receive");
             System.out.println("there is no users for this");
         }
+
         WebSocketSession trgtSession = wsSessionManager.getSession(receiver);
         boolean isSessioninRoom = wsSessionManager.isSessionInRoom(roomId,trgtSession);
         wsSessionManager.addRoomSession(roomId,session);
         redisMessageService.resetUnreadCnt(sender,roomId); // 채팅방 입장시 리셋
+
         if(trgtSession != null && isSessioninRoom ){
 
             JsonObject response = new JsonObject();
@@ -244,6 +231,7 @@ public class MyWsHandler implements WebSocketHandler {
             trgtSession.sendMessage(new TextMessage(response.toString()));
 
         }else if(trgtSession != null){
+
             redisMessageService.incrementUnreadCnt(receiver,roomId);
             JsonObject response = new JsonObject();
             response.addProperty("type","status");
@@ -256,18 +244,24 @@ public class MyWsHandler implements WebSocketHandler {
 
     }
 
-    public void handleTypeClose(WebSocketSession session,JsonObject payload) throws IOException {
+    private void handleTypeClose(WebSocketSession session,JsonObject payload) throws IOException {
         Long roomId = payload.get("roomId").getAsLong();
         System.out.printf("closing room :",roomId);
         String sem = payload.get("semail").getAsString(); // 채팅방 닫기를 누른 사람.
         System.out.printf("closing user:", sem);
         logger.debug("User closed",roomId,sem);
+
         JsonObject response = new JsonObject();
+
         response.addProperty("type","status");
+
         response.addProperty("roomId",roomId);
+
         response.addProperty("doesSheInRoom", false);
         wsSessionManager.removeSessionFromRoom(roomId,sem);
+
         System.out.println("룸에서 현재 세션 삭제"  +sem);
+
         if(wsSessionManager.getRoomSession(roomId)){
             WebSocketSession trgtSession = wsSessionManager.getSessionFromRoom(roomId);
             if(trgtSession != null) {
@@ -277,7 +271,7 @@ public class MyWsHandler implements WebSocketHandler {
 
     }
 
-    public void adminSays(JsonObject payload) throws IOException {
+    private void adminSays(JsonObject payload) throws IOException {
         ExecutorService executor = Executors.newFixedThreadPool(10);
         List<UserDTO> users  = userService.getAllUsers();
         Map<String,WebSocketSession> sessions = wsSessionManager.getAllsessions();

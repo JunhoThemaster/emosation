@@ -473,7 +473,7 @@ async function sendMessage(receiverEmail) {
 
         const msg = {
             type: "message",
-            destination: `/ynm/chat/${encodeURIComponent(receiverEmail)}`,  // 수신자의 이메일
+            destination: encodeURIComponent(receiverEmail),  // 수신자의 이메일
             payload: {
                 sender: LoggedIn.userEmail, // 발신자 이메일
                 content: msginput.value
