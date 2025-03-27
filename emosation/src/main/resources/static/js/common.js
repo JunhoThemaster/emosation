@@ -747,7 +747,7 @@ async function getroombyroomId(roomId){
 
                 console.log(receiver);
                 if (receiver) {
-                    alert(`Receiver: ${receiver}`); // 수신자 이메일을 확인 , 근데 여기서도 첫 메세지면 sender의 email만 존재하니 receiver는 없음 없을때
+                    alert(`Receiver: ${receiver}`);
                     const trgt = document.getElementById("trgt");
                     trgt.onclick = function (ev) {
                         ev.preventDefault();

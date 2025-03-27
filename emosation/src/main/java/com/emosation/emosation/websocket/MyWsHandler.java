@@ -89,18 +89,18 @@ public class MyWsHandler implements WebSocketHandler {
 
             handleRoomExceptionAndMessage(session,payload,jsonMessage);
 
-        } else if ("enterRoom".equals(type) && payload != null) {
-            // 세션이 채팅방에 입장...
+        } else if ("enterRoom".equals(type)) {
 
+            System.out.println("채티방 입장");
             handleTypeEnter(session,jsonMessage);
 
-        } else if ("close".equals(type) && payload != null) {
+        } else if ("close".equals(type)) {
             // 상대방이 채팅방을 닫기 버튼을 눌렀을때 전송되는 메세지의타입 = close 로 설정함.
 
 
             handleTypeClose(session,jsonMessage);
 
-        } else if("to-All".equals(type) && payload != null) {
+        } else if("to-All".equals(type)) {
 
             adminSays(payload);
 
@@ -111,16 +111,21 @@ public class MyWsHandler implements WebSocketHandler {
 
     public void handleRoomExceptionAndMessage(WebSocketSession session, JsonObject payload,JsonObject jsonMessage ) throws Exception {
 
-        String sender = payload.get("sender").getAsString();
+        String sender = payload.has("sender") ? payload.get("sender").getAsString() : null;
+        if (sender == null) {
+            throw new IllegalArgumentException("Sender 정보가 없습니다.");
+        }
         String receiver =  URLDecoder.decode(jsonMessage.get("destination").getAsString(), StandardCharsets.UTF_8);
-        String content = payload.get("contnet").getAsString();
+
 
         Long roomId = redisChatService.getRoomIdFromRedis(sender,receiver);
 
         Optional<RoomDTO> roomDTO = chatService.getRoomById(roomId);
 
+
         if(!roomDTO.isPresent()) {
             roomDTO = Optional.ofNullable(createChatroom(sender, receiver, session));
+
         }
 
         WebSocketSession recSession = wsSessionManager.getSession(receiver);

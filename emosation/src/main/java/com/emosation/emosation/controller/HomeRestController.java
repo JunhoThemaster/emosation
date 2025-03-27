@@ -140,12 +140,15 @@ public class HomeRestController {
 
         List<MessageDTO> rdmsgList = redisMessageService.getMsgListfrRedis(roomId);
 
-        List<UserDTO> userDTOS = rdmsgList.stream().map(MessageDTO::getSender).distinct().collect(Collectors.toList()); // 동일한 값 제거.
+        Optional<RoomDTO> roomDTO = chatService.getRoomById(roomId);
+
+        List<UserDTO> userDTOS = new ArrayList<>();
+
+        if(roomDTO.isPresent()) {                               // 기존에 msg리스트에 저장했던 UserDTO를 뽑아 보내는건 잘못됨. 왜냐면 상대가 메세지를 한번도 안보냈다면??? 그럼 없는것임.
+           userDTOS =  roomDTO.get().getRoomUser();
+        }
 
 
-        // 여기서 해당 채팅을 나누던 친구가 탈퇴시에 조회가되지않음 해결해야함
-       // 여기서 해당 유저가 나갔다는 가정하에 roomInUser 행을 하나 삭제하니 userDTO에 유저 하나만 존재함..
-        // 따라서 redis에서 메세지 조회시에 msgddTO에 redis에 저장된 sender값을 userDTO에 추가후 msgDTO에 userDTO추가함.
         if(rdmsgList == null) {
           res.put("msg","no rooms for read");
           return ResponseEntity.ok(res);
