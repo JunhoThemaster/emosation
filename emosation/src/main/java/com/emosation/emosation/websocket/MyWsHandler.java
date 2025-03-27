@@ -179,9 +179,11 @@ public class MyWsHandler implements WebSocketHandler {
         redisMessageService.saveMsgtoRedis(sender,roomId, payload.get("content").getAsString(),LocalDateTime.now());
 
 
-
-        targetSession.sendMessage(new TextMessage(msgObj.toString())); // 이후 메세지 전달.
-
+        if(targetSession.isOpen() && targetSession != null){
+            targetSession.sendMessage(new TextMessage(msgObj.toString()));
+        } else if(targetSession == null){
+            System.out.println("상대 세션 없음");
+        }
 
     }
     private void handleMsgForTrgtIsReading(WebSocketSession targetSession,Long roomId,String recipientEmail1,String sender,JsonObject payload) throws IOException{
@@ -235,7 +237,7 @@ public class MyWsHandler implements WebSocketHandler {
             session.sendMessage(new TextMessage(response.toString()));
             trgtSession.sendMessage(new TextMessage(response.toString()));
 
-        }else if(trgtSession != null){
+        }else if(trgtSession == null){
 
             redisMessageService.incrementUnreadCnt(receiver,roomId);
             JsonObject response = new JsonObject();
@@ -269,8 +271,11 @@ public class MyWsHandler implements WebSocketHandler {
 
         if(wsSessionManager.getRoomSession(roomId)){
             WebSocketSession trgtSession = wsSessionManager.getSessionFromRoom(roomId);
-            if(trgtSession != null) {
+            if(trgtSession.isOpen() && trgtSession != null) {
+                session.sendMessage(new TextMessage(response.toString()));
                 trgtSession.sendMessage(new TextMessage(response.toString()));
+            }else{
+                System.out.println("세션 없음");
             }
         }
 
