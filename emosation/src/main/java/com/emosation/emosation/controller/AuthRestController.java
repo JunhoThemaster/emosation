@@ -125,8 +125,6 @@ public class AuthRestController {
     @PostMapping("/chekLogin")
     public ResponseEntity<Map<String, Object>> checkLogin(@RequestHeader("Authorization") String auth,
                                                           @RequestHeader(value = "Refresh-Token") String refreshToken) {
-
-
         if(auth == null || !auth.startsWith("Bearer ")){
             System.err.println("헤더 정보가 없습니다: Authorization 헤더가 잘못되었습니다.");
             return ResponseEntity.status(401).body((Map.of("message", "헤더정보가 없습니다")));

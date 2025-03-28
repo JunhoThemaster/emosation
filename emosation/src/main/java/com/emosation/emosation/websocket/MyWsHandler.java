@@ -115,12 +115,11 @@ public class MyWsHandler implements WebSocketHandler {
         if (sender == null) {
             throw new IllegalArgumentException("Sender 정보가 없습니다.");
         }
-        String receiver =  URLDecoder.decode(jsonMessage.get("destination").getAsString(), StandardCharsets.UTF_8);
+        String receiver =  URLDecoder.decode(jsonMessage.get("destination").getAsString(), StandardCharsets.UTF_8); // 메세지 전송 대상
 
+        Long roomId = redisChatService.getRoomIdFromRedis(sender,receiver); // 첫 채팅인 경우 roomId는 존재하지 않을 것임.
 
-        Long roomId = redisChatService.getRoomIdFromRedis(sender,receiver);
-
-        Optional<RoomDTO> roomDTO = chatService.getRoomById(roomId);
+        Optional<RoomDTO> roomDTO = chatService.getRoomById(roomId);  // 여기서 Optional을 쓴 이유만약 존재하지 않으면 채팅방을 자동으로 생성해주기 위함
 
 
         if(!roomDTO.isPresent()) {
@@ -179,7 +178,7 @@ public class MyWsHandler implements WebSocketHandler {
         redisMessageService.saveMsgtoRedis(sender,roomId, payload.get("content").getAsString(),LocalDateTime.now());
 
 
-        if(targetSession.isOpen() && targetSession != null){
+        if(targetSession != null && targetSession.isOpen()){
             targetSession.sendMessage(new TextMessage(msgObj.toString()));
         } else if(targetSession == null){
             System.out.println("상대 세션 없음");
@@ -271,7 +270,7 @@ public class MyWsHandler implements WebSocketHandler {
 
         if(wsSessionManager.getRoomSession(roomId)){
             WebSocketSession trgtSession = wsSessionManager.getSessionFromRoom(roomId);
-            if(trgtSession.isOpen() && trgtSession != null) {
+            if( trgtSession != null && trgtSession.isOpen()) {
                 session.sendMessage(new TextMessage(response.toString()));
                 trgtSession.sendMessage(new TextMessage(response.toString()));
             }else{

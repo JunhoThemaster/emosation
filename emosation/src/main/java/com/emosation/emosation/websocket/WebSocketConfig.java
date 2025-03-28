@@ -6,6 +6,7 @@ import com.emosation.emosation.sevices.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -29,10 +30,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final UserService userService;
 
     @Autowired
-    public WebSocketConfig(JwtUtil jwtUtil,WsSessionManager wsSessionManager,
-                           ChatService chatService,OpenAiService openAiService,
+    public WebSocketConfig(JwtUtil jwtUtil,
+                           WsSessionManager wsSessionManager,
+                           ChatService chatService,
+                           OpenAiService openAiService,
                            RedisMessageService redisMessageService,RedisSessionService redisSessionService,
-                           RedisChatService redisChatService,UserService userService) {
+                           RedisChatService redisChatService,UserService userService , MessageService messageService) {
         this.chatService = chatService;
         this.wsSessionManager = wsSessionManager;
         this.jwtUtil = jwtUtil;
