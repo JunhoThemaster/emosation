@@ -3,6 +3,7 @@ package com.emosation.emosation.websocket;
 import com.emosation.emosation.Util.JwtUtil;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.server.HandshakeInterceptor;
@@ -10,6 +11,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import java.net.http.WebSocketHandshakeException;
 import java.util.Map;
 
+@Component
 public class WebSocketHandShakeInterCeptor implements HandshakeInterceptor {
 
 

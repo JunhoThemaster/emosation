@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 
 import javax.annotation.PreDestroy;
@@ -29,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+@Component
 public class MyWsHandler implements WebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(MyWsHandler.class);
