@@ -56,10 +56,10 @@ public class HomeRestController {
 
 
     @GetMapping("/main/findfr")
-    public ResponseEntity<Map<String,Object>> findFriends(@RequestParam String name) {
+    public ResponseEntity<Map<String,Object>> findFriends(@RequestParam String userEmail) {
 
 
-        Optional<UserDTO> user = userService.findUserByName(name);
+        Optional<UserDTO> user = userService.findUserByEmail(userEmail);
         Map<String,Object> res = new HashMap<>();
 
         user.ifPresentOrElse(

@@ -1,6 +1,7 @@
 package com.emosation.emosation.websocket;
 
 import com.emosation.emosation.Util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class WebSocketHandShakeInterCeptor implements HandshakeInterceptor {
 
     private final JwtUtil jwtUtil;
     private final WsSessionManager wsSessionManager;
-
+    @Autowired
     public WebSocketHandShakeInterCeptor(JwtUtil jwtUtil,WsSessionManager wsSessionManager) {
         this.wsSessionManager = wsSessionManager;
         this.jwtUtil = jwtUtil;

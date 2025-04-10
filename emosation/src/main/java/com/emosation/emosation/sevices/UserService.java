@@ -109,8 +109,10 @@ public class UserService {
 
 
 
-    public Optional<UserDTO> findUserByName(String name) {
-            Optional<User> user  = userRepository.findByName(name.trim());
+    public Optional<UserDTO> findUserByEmail(String userEmail) {
+            Optional<User> user  = Optional.ofNullable(userRepository.findByEmail(userEmail));
+
+
             if(user.isPresent()) {
                 User u = user.get();
                 return Optional.of(new UserDTO(u.getId(), u.getName(),u.getEmail(),u.getPics(),(u.getRegisterd_at()).toString(),u.getStatus()));
@@ -153,9 +155,9 @@ public class UserService {
                throw new IllegalStateException("다른 요청이 이 이메일을 처리중"); // false인 경우 이미 가입 진행중인 이메일이 있다는 뜻임.
 
             }
-
+            User user1 = userRepository.findByEmail(email);
             // else
-            if (userRepository.findByEmail(email) != null) {
+            if (user1 != null) {
                 throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
             }
 

@@ -46,7 +46,7 @@ public class MyWsHandler implements WebSocketHandler {
     // 그래서 세션의 정보를 명시적으로 지정하는 방법을 찾아보니 websocket api만을 이용한 방법이 있었음
 
 
-
+    @Autowired
     public MyWsHandler(WsSessionManager wsSessionManager,
                        ChatService chatService ,RedisChatService redisChatService,OpenAiService openAiService,RedisMessageService redisMessageService,
                        RedisSessionService redisSessionService,UserService userService) {
