@@ -172,6 +172,7 @@ https://13.125.58.11/adm
   - ![image](https://github.com/user-attachments/assets/0c1056b0-dc1c-40dc-8ff3-8c7f84f8cf54)
 
 
+  - fix local oracle X 오라클 db를 도커 이미지 빌드후 ec2 인스턴스 내에서 실행되는 방식으로 fix
 
 # 회고 
  - AWS EC2 + Docker 를 이용해 배포를 하는 프로세스는 좋았으나 Oracle 연결시 Oracle 을 로컬 환경(내 PC) Oracle에 포트포워딩을 통한 연결해주는 부분이 아쉬웠습나다.
